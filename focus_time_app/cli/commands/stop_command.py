@@ -3,9 +3,9 @@ from zoneinfo import ZoneInfo
 
 import typer
 
-from calendar.abstract_calendar_adapter import AbstractCalendarAdapter
-from calendar.utils import compute_calendar_query_start_and_stop, get_active_focustime_event
-from configuration.configuration import ConfigurationV1
+from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
+from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop, get_active_focustime_event
+from focus_time_app.configuration.configuration import ConfigurationV1
 
 
 class StopCommand:

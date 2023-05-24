@@ -1,6 +1,6 @@
-from calendar.event import CalendarType
-from configuration.configuration import ConfigurationV1
-from configuration.persistence import Persistence
+from focus_time_app.focus_time_calendar.event import CalendarType
+from focus_time_app.configuration import ConfigurationV1
+from focus_time_app.configuration import Persistence
 
 config = ConfigurationV1(calendar_type=CalendarType.Outlook365, calendar_look_ahead_hours=4, calendar_look_back_hours=5,
                          focustime_event_name="foo", start_commands=["foo"], stop_commands=["bar"],

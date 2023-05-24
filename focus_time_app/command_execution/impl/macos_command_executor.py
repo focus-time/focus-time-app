@@ -1,9 +1,12 @@
 from typing import List
 
-from command_execution.abstract_command_executor import AbstractCommandExecutor
+from focus_time_app.command_execution.abstract_command_executor import AbstractCommandExecutor
 
 
 class MacOsCommandExecutor(AbstractCommandExecutor):
 
     def execute_commands(self, commands: List[str]):
+        pass
+
+    def install_dnd_helpers(self):
         pass

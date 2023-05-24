@@ -1,14 +1,21 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional, Dict, Any
 
 import marshmallow.validate
 import marshmallow_dataclass
 from marshmallow.fields import Enum
+from marshmallow_dataclass import NewType
 
-from calendar.event import CalendarType
+from focus_time_app.focus_time_calendar.event import CalendarType
+
+UUID = NewType("UUID", str, field=marshmallow.fields.UUID)
 
 
-# CalendarTypeType = NewType("CalendarType", str, field=marshmallow.fields.Enum)
+@dataclass
+class Outlook365ConfigurationV1:
+    client_id: UUID
+    calendar_name: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
+
 
 @dataclass
 class ConfigurationV1:
@@ -18,10 +25,11 @@ class ConfigurationV1:
     focustime_event_name: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
     start_commands: List[str]
     stop_commands: List[str]
-    focustime_os_profile_name: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
+    dnd_profile_name: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
     adjust_event_reminder_time: bool
     event_reminder_time_minutes: int = field(metadata={"validate": marshmallow.validate.Range(min=1)})
     version: int = field(default=1)
+    adapter_configuration: Optional[Dict[str, Any]] = field(default=None)
 
 
 ConfigurationV1Schema = marshmallow_dataclass.class_schema(ConfigurationV1)

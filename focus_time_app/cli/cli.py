@@ -1,19 +1,15 @@
-# TODO helpful stuff from Typer
-# raise typer.Exit()
-# typer.get_app_dir()
-# typer.launch("https://typer.tiangolo.com")
 from typing import Tuple, Annotated
 
 import typer
 
-from calendar.abstract_calendar_adapter import AbstractCalendarAdapter
-from calendar.adapter_factory import create_calendar_adapter
-from cli.commands.configuration_command import ConfigurationCommand
-from cli.commands.start_command import StartCommand
-from cli.commands.stop_command import StopCommand
-from cli.commands.sync_command import SyncCommand
-from configuration.configuration import ConfigurationV1
-from configuration.persistence import Persistence
+from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
+from focus_time_app.focus_time_calendar.adapter_factory import create_calendar_adapter
+from focus_time_app.cli.commands.configuration_command import ConfigurationCommand
+from focus_time_app.cli.commands.start_command import StartCommand
+from focus_time_app.cli.commands.stop_command import StopCommand
+from focus_time_app.cli.commands.sync_command import SyncCommand
+from focus_time_app.configuration.configuration import ConfigurationV1
+from focus_time_app.configuration.persistence import Persistence
 
 app = typer.Typer()  # TODO add configuration, e.g. help text
 

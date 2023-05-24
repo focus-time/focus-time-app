@@ -1,16 +1,20 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List
+from typing import List, Optional, Dict, Any
 
-from calendar.event import FocusTimeEvent
+from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 
 
 class AbstractCalendarAdapter(ABC):
     @abstractmethod
-    def authenticate(self):
+    def authenticate(self) -> Optional[Dict[str, Any]]:
         """
+        Interactively queries the user for information (in the terminal) necessary to retrieve events from the calendar.
+        Typically involves asking for some application ID (e.g. OAuth Client ID), endpoint URLs, or the name of the
+        calendar (in case the user account can host multiple calendars).
 
-        :return:
+        :return: Dict that contains the adapter-specific configuration (if authentication was successful),
+            None otherwise
         """
 
     @abstractmethod

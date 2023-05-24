@@ -4,7 +4,7 @@ from pathlib import Path
 import typer
 import yaml
 
-from configuration.configuration import ConfigurationV1, ConfigurationV1Schema
+from focus_time_app.configuration.configuration import ConfigurationV1, ConfigurationV1Schema
 
 configuration_v1_schema = ConfigurationV1Schema()
 
@@ -16,7 +16,7 @@ class Persistence:
 
     @staticmethod
     def load_configuration() -> ConfigurationV1:
-        with Persistence._get_config_file_path().open("rt", encoding="utf-8") as f:
+        with Persistence.get_config_file_path().open("rt", encoding="utf-8") as f:
             config_as_dict: dict = yaml.safe_load(f)
 
         if v := config_as_dict["version"] != 1:
@@ -28,8 +28,8 @@ class Persistence:
     @staticmethod
     def store_configuration(configuration: ConfigurationV1):
         config_as_dict = configuration_v1_schema.dump(configuration)
-        Persistence._get_config_file_path().parent.mkdir(parents=True, exist_ok=True)
-        with Persistence._get_config_file_path().open("wt", encoding="utf-8") as f:
+        Persistence.get_config_file_path().parent.mkdir(parents=True, exist_ok=True)
+        with Persistence.get_config_file_path().open("wt", encoding="utf-8") as f:
             yaml.dump(config_as_dict, f)
 
     @staticmethod
@@ -57,5 +57,5 @@ class Persistence:
         return Persistence._get_storage_directory() / Persistence.MARKER_FILE_NAME
 
     @staticmethod
-    def _get_config_file_path() -> Path:
+    def get_config_file_path() -> Path:
         return Persistence._get_storage_directory() / Persistence.CONFIG_FILE_NAME
