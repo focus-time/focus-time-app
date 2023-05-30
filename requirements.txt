@@ -4,4 +4,4 @@ marshmallow-dataclass==8.5.14
 PyYAML==6.0
 keyring==23.13.1
 tendo==0.3.0
-pywin32==306
+pywin32==306; sys_platform == 'win32'
