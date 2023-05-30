@@ -22,7 +22,8 @@ class SyncCommand:
             else:
                 typer.echo("Found a new focus time, calling start command(s) ...")
                 try:
-                    CommandExecutorImpl.execute_commands(self._configuration.start_commands)
+                    CommandExecutorImpl.execute_commands(self._configuration.start_commands,
+                                                         self._configuration.dnd_profile_name)
                 finally:
                     Persistence.set_ongoing_focustime(ongoing=True)
 
@@ -30,7 +31,8 @@ class SyncCommand:
             if marker_file_exists:
                 typer.echo("No focus time is active, calling stop command(s) ...")
                 try:
-                    CommandExecutorImpl.execute_commands(self._configuration.stop_commands)
+                    CommandExecutorImpl.execute_commands(self._configuration.stop_commands,
+                                                         self._configuration.dnd_profile_name)
                 finally:
                     Persistence.set_ongoing_focustime(ongoing=False)
             else:

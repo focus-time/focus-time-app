@@ -71,7 +71,8 @@ class ConfigurationCommand:
 
         CommandExecutorImpl.install_dnd_helpers()
 
-        BackgroundSchedulerImpl.install_or_repair_background_scheduler()
+        if getattr(sys, 'frozen', False):
+            BackgroundSchedulerImpl.install_or_repair_background_scheduler()
 
         Persistence.store_configuration(configuration)
 

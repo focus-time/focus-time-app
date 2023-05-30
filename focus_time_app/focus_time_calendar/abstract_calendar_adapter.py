@@ -27,7 +27,7 @@ class AbstractCalendarAdapter(ABC):
     @abstractmethod
     def get_events(self, from_date: datetime, to_date: datetime) -> List[FocusTimeEvent]:
         """
-
+        TODO expect sorted by start time (ascending)
         :param from_date:
         :param to_date:
         :return:
@@ -43,7 +43,8 @@ class AbstractCalendarAdapter(ABC):
         """
 
     @abstractmethod
-    def update_event(self, event: FocusTimeEvent, from_date: datetime, to_date: datetime, reminder_in_minutes: int):
+    def update_event(self, event: FocusTimeEvent, from_date: Optional[datetime] = None,
+                     to_date: Optional[datetime] = None, reminder_in_minutes: Optional[int] = None):
         """
 
         :param event:

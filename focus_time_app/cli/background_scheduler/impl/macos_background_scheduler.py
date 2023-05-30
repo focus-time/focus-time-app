@@ -1,6 +1,8 @@
 from focus_time_app.cli.background_scheduler.abstract_background_scheduler import AbstractBackgroundScheduler
 
 
+# TODO implement
+
 class MacOsBackgroundScheduler(AbstractBackgroundScheduler):
     def install_or_repair_background_scheduler(self):
         pass

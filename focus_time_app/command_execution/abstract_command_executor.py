@@ -12,7 +12,7 @@ class CommandExecutorConstants:
 class AbstractCommandExecutor(ABC):
 
     @abstractmethod
-    def execute_commands(self, commands: List[str]):
+    def execute_commands(self, commands: List[str], dnd_profile_name: str):
         """
 
         :param commands:

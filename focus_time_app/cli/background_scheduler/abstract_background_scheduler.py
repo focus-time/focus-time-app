@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 
+# TODO document
 class AbstractBackgroundScheduler(ABC):
     @abstractmethod
     def install_or_repair_background_scheduler(self):
