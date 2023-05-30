@@ -1,24 +1,41 @@
+import os.path
 import subprocess
+import sys
+from pathlib import Path
 from typing import List
 
+from command_execution.abstract_command_executor import CommandExecutorConstants
 from focus_time_app.command_execution.abstract_command_executor import AbstractCommandExecutor
 
-# TODO implement
 
 class MacOsCommandExecutor(AbstractCommandExecutor):
-    FOCUS_MODE_SHORTCUT_NAME = "Focus Time (do not edit)"
+    FOCUS_MODE_SHORTCUT_FILENAME = "focus-time-app.shortcut"
 
     def execute_commands(self, commands: List[str], dnd_profile_name: str):
-        pass
+        for command in commands:
+            if command == CommandExecutorConstants.DND_START_COMMAND:
+                subprocess.check_call(f"shortcuts '{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}' <<< on",
+                                      shell=True)
+            elif command == CommandExecutorConstants.DND_STOP_COMMAND:
+                subprocess.check_call(f"shortcuts '{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}' <<< off",
+                                      shell=True)
+            else:
+                subprocess.check_call(command, shell=True)
 
     def install_dnd_helpers(self):
         if not self._is_shortcut_installed():
             self._install_shortcut()
 
-    def _is_shortcut_installed(self) -> bool:
+    @staticmethod
+    def _is_shortcut_installed() -> bool:
         output_bytes = subprocess.check_output(["shortcuts", "list"], shell=True)
         output_lines = output_bytes.decode("utf-8").splitlines()
-        return self.FOCUS_MODE_SHORTCUT_NAME in output_lines
+        return CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME in output_lines
 
     def _install_shortcut(self):
-        subprocess.check_call(["open", "/path/to/file.shortcut"])  # TODO
+        # TODO: do we need to print instructions for the user?
+        if getattr(sys, 'frozen', False):
+            path = os.path.join(sys.executable, self.FOCUS_MODE_SHORTCUT_FILENAME)
+        else:
+            path = str(Path(__file__).parent.parent.parent.parent / "resources" / self.FOCUS_MODE_SHORTCUT_FILENAME)
+        subprocess.check_call(["open", path])

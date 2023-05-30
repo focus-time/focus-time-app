@@ -26,7 +26,6 @@ For the time being, the following features are not yet implemented (but PRs or i
 ## TODOs
 
 - Logging system
-- Build PyInstaller-based binaries
 - CD pipeline that creates automated builds for Windows and macOS
 - Testing
     - To build a system-level test (that tests the frozen binaries), we would need a --non-interactive flag for the

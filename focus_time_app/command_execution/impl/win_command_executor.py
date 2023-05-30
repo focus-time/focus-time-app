@@ -1,7 +1,7 @@
 import subprocess
 from typing import List
 
-from command_execution.abstract_command_executor import CommandExecutorConstants
+from focus_time_app.command_execution.abstract_command_executor import CommandExecutorConstants
 from focus_time_app.command_execution.abstract_command_executor import AbstractCommandExecutor
 
 

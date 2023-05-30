@@ -7,6 +7,7 @@ class CommandExecutorConstants:
     DND_STOP_COMMAND = "dnd-stop"
     WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE = "prio-only"
     WINDOWS_FOCUS_ASSIST_ALARMS_ONLY_PROFILE = "alarms-only"
+    MACOS_FOCUS_MODE_SHORTCUT_NAME = "Focus Time App"
 
 
 class AbstractCommandExecutor(ABC):

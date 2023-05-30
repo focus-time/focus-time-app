@@ -115,15 +115,13 @@ class ConfigurationCommand:
                      f"'{CommandExecutorConstants.DND_START_COMMAND}' command)"
             type_ = Choice(choices=[CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE,
                                     CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_ALARMS_ONLY_PROFILE])
+            configuration.dnd_profile_name = typer.prompt(prompt, type=type_)
         elif sys.platform == "darwin":
-            prompt = "Please specify the name of the macOS Focus profile you want the Focus Time App to use when " \
-                     "starting a focus assist session (due to the magic " \
-                     f"'{CommandExecutorConstants.DND_START_COMMAND}' command)"
-            type_ = None
+            typer.echo(f"To change the name of the macOS Focus profile you want the Focus Time App to use when "
+                       f"starting a focus session, open the 'Shortcuts' app and change the "
+                       f"focus profile in the '{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}' shortcut")
         else:
             raise NotImplementedError
-
-        configuration.dnd_profile_name = typer.prompt(prompt, type=type_)
 
     @staticmethod
     def _configure_event_reminders(configuration: ConfigurationV1):
