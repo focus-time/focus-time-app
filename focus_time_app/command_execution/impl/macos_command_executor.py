@@ -34,6 +34,8 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
 
     def _install_shortcut(self):
         # TODO: do we need to print instructions for the user?
+        # TODO is "open" really enough or do we need to click a button? Could this be automated with AppleScript, e.g.
+        #  https://stackoverflow.com/questions/48660465/how-can-i-click-ok-with-apple-script
         if getattr(sys, 'frozen', False):
             path = os.path.join(sys.executable, self.FOCUS_MODE_SHORTCUT_FILENAME)
         else:

@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
 
@@ -16,10 +17,12 @@ from focus_time_app.focus_time_calendar.impl.outlook365_keyring_backend import O
 def consent_input_token(consent_url: str):
     typer.echo("Visit the following url to grant the Focus Time app access to your personal Outlook 365 calendars:")
     typer.echo(consent_url)
-    typer.launch(consent_url)
+    if os.getenv("CI", None) is None:
+        typer.launch(consent_url)
     typer.echo("After you logged into your Microsoft account and granted consent, your browser should have redirected "
                "you to an empty (white) web page")
-    return typer.prompt("Please copy the URL from the browser's address bar and paste it here, then press Enter")
+    return typer.prompt("Please copy the URL from the browser's address bar and paste it here, then press Enter",
+                        prompt_suffix='\n')
 
 
 outlook_configuration_v1_schema = marshmallow_dataclass.class_schema(Outlook365ConfigurationV1)()
@@ -37,7 +40,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         self._backend = Outlook365KeyringBackend()
 
     def authenticate(self) -> Optional[Dict[str, Any]]:
-        client_id: str = typer.prompt("Provide the Client ID of your Azure App registration")
+        client_id: str = typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
         self._account = Account(client_id, auth_flow_type='public', token_backend=self._backend)
         if self._account.authenticate(scopes=['basic', 'calendar_all'], handle_consent=consent_input_token):
             typer.echo("Retrieving the list of calendars ...")
@@ -52,7 +55,8 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
             else:
                 calendar_names = [calendar.name for calendar in calendars]
                 name_choice = Choice(calendar_names)
-                calendar_name = typer.prompt("Please provide the name of your calendar", type=name_choice)
+                calendar_name = typer.prompt("Please provide the name of your calendar", type=name_choice,
+                                             prompt_suffix='\n')
 
             self._outlook_configuration = Outlook365ConfigurationV1(client_id=client_id, calendar_name=calendar_name)
             return outlook_configuration_v1_schema.dump(self._outlook_configuration)

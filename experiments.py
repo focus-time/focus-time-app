@@ -4,7 +4,7 @@ import datetime
 
 NAME = "Focus Time App Trigger"
 
-scheduler = win32com.client.Dispatch('{6bff4732-81ec-4ffb-ae67-b6c1bc29631f}', clsctx=pythoncom.CLSCTX_LOCAL_SERVER)
+scheduler = win32com.client.Dispatch('IQuietHoursSettings', clsctx=pythoncom.CLSCTX_LOCAL_SERVER)
 scheduler = win32com.client.Dispatch('Schedule.Service')
 scheduler.Connect()
 task_folder = scheduler.GetFolder('\\')

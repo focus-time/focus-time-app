@@ -35,7 +35,7 @@ class ConfigurationCommand:
             else:
                 typer.echo("Successfully established a test connection to your configured calendar")
 
-        if not typer.confirm("Do you want to create a new configuration?", default=False):
+        if not typer.confirm("Do you want to create a new configuration?", default=False, prompt_suffix='\n'):
             return
 
         if Persistence.get_config_file_path().exists():
@@ -43,7 +43,8 @@ class ConfigurationCommand:
             typer.echo("Deleted old configuration")
 
         choices = IntEnumChoice(CalendarType)
-        calendar_type: CalendarType = typer.prompt(text="Choose your calendar provider", type=choices)
+        calendar_type: CalendarType = typer.prompt(text="Choose your calendar provider", type=choices,
+                                                   prompt_suffix='\n')
         configuration = ConfigurationV1(calendar_type=calendar_type, calendar_look_ahead_hours=0,
                                         calendar_look_back_hours=0, focustime_event_name="Foo", start_commands=[],
                                         stop_commands=[], dnd_profile_name="foo",
@@ -54,13 +55,14 @@ class ConfigurationCommand:
             if adapter_configuration:
                 configuration.adapter_configuration = adapter_configuration
                 break
-            if not typer.confirm("Do you want to try again configuring the calendar provider?", default=True):
+            if not typer.confirm("Do you want to try again configuring the calendar provider?", default=True,
+                                 prompt_suffix='\n'):
                 typer.echo("Aborting the configuration process")
                 raise typer.Exit(code=1)
 
         configuration.focustime_event_name = \
             typer.prompt("What is the title or subject of your Focus time events in your calendar?",
-                         default="Focustime")
+                         default="Focustime", prompt_suffix='\n')
         self._configure_calendar_query_time_interval(configuration)
 
         self._configure_start_and_stop_commands(configuration)
@@ -84,11 +86,11 @@ class ConfigurationCommand:
         configuration.calendar_look_back_hours = \
             typer.prompt("When querying your calendar for focus time events, how many hours into the past should "
                          "the query look? Choose a number that is by 1 larger than the longest Focus time event "
-                         "duration you will ever create", type=int, default=3)
+                         "duration you will ever create", type=int, default=3, prompt_suffix='\n')
         configuration.calendar_look_ahead_hours = \
             typer.prompt("When querying your calendar for focus time events, how many hours into the future should "
                          "the query look? Choose a number that is at least by 1 larger than the longest Focus time "
-                         "event duration you will ever create", type=int)
+                         "event duration you will ever create", type=int, prompt_suffix='\n')
 
     @staticmethod
     def _configure_start_and_stop_commands(configuration: ConfigurationV1):
@@ -97,14 +99,14 @@ class ConfigurationCommand:
                            "Enter without providing any input. " \
                            f"Use the magic command '{CommandExecutorConstants.DND_START_COMMAND}' to begin a " \
                            "Do-Not-Disturb session (called 'Focus assist' on Windows, or 'Focus' on macOS)"
-        while start_command := typer.prompt(start_cmd_prompt, default=''):
+        while start_command := typer.prompt(start_cmd_prompt, default='', prompt_suffix='\n'):
             configuration.start_commands.append(start_command)
         stop_cmd_prompt = "Which shell command do you want the Focus Time app to run once a focus time event has ended? " \
                           "You can enter multiple commands, if desired. To complete providing commands, just press " \
                           "Enter without providing any input. " \
                           f"Use the magic command '{CommandExecutorConstants.DND_STOP_COMMAND}' to stop the on-going " \
                           "Do-Not-Disturb session"
-        while len(stop_command := typer.prompt(stop_cmd_prompt, default='')) > 0:
+        while len(stop_command := typer.prompt(stop_cmd_prompt, default='', prompt_suffix='\n')) > 0:
             configuration.stop_commands.append(stop_command)
 
     @staticmethod
@@ -115,7 +117,7 @@ class ConfigurationCommand:
                      f"'{CommandExecutorConstants.DND_START_COMMAND}' command)"
             type_ = Choice(choices=[CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE,
                                     CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_ALARMS_ONLY_PROFILE])
-            configuration.dnd_profile_name = typer.prompt(prompt, type=type_)
+            configuration.dnd_profile_name = typer.prompt(prompt, type=type_, prompt_suffix='\n')
         elif sys.platform == "darwin":
             typer.echo(f"To change the name of the macOS Focus profile you want the Focus Time App to use when "
                        f"starting a focus session, open the 'Shortcuts' app and change the "
@@ -127,9 +129,9 @@ class ConfigurationCommand:
     def _configure_event_reminders(configuration: ConfigurationV1):
         configuration.adjust_event_reminder_time = \
             typer.confirm("Do you want the Focus Time app to overwrite the reminder time of the focus time "
-                          "calendar events?", default=True)
+                          "calendar events?", default=True, prompt_suffix='\n')
 
         if configuration.adjust_event_reminder_time:
             configuration.event_reminder_time_minutes = \
                 typer.prompt("How many minutes prior to a focus time calendar event starting should the "
-                             "reminder be shown?", type=int, default=15)
+                             "reminder be shown?", type=int, default=15, prompt_suffix='\n')
