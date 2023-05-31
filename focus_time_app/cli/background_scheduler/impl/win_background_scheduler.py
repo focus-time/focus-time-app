@@ -8,6 +8,10 @@ from focus_time_app.cli.background_scheduler.abstract_background_scheduler impor
 
 
 class WindowsBackgroundScheduler(AbstractBackgroundScheduler):
+    """
+    Windows COM-based implementation that creates background jobs using Windows' "task scheduler" feature.
+    """
+
     TASK_NAME = "Focus Time App Synchronization Trigger"
 
     def __init__(self):

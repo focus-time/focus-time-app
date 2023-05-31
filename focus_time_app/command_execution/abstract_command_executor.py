@@ -10,6 +10,8 @@ class CommandExecutorConstants:
     MACOS_FOCUS_MODE_SHORTCUT_NAME = "Focus Time App"
 
 
+# TODO document
+
 class AbstractCommandExecutor(ABC):
 
     @abstractmethod
@@ -22,6 +24,12 @@ class AbstractCommandExecutor(ABC):
 
     @abstractmethod
     def install_dnd_helpers(self):
+        """
+
+        :return:
+        """
+
+    def uninstall_dnd_helpers(self):
         """
 
         :return:

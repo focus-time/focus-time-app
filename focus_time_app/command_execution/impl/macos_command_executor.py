@@ -41,3 +41,6 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
         else:
             path = str(Path(__file__).parent.parent.parent.parent / "resources" / self.FOCUS_MODE_SHORTCUT_FILENAME)
         subprocess.check_call(["open", path])
+
+    def uninstall_dnd_helpers(self):
+        pass  # Does not seem to be possible - the "shortcuts" CLI has no remove/delete option!

@@ -76,7 +76,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
     def get_events(self, from_date: datetime, to_date: datetime) -> List[FocusTimeEvent]:
         schedule, calendar = self._get_schedule_and_calendar()
         q = calendar.new_query('start').greater_equal(from_date).order_by('start', ascending=True)
-        q.chain('and').on_attribute('end').less_equal(to_date)
+        q.chain('and').on_attribute('start').less_equal(to_date)
 
         events: List[FocusTimeEvent] = []
         o365_events = schedule.get_events(query=q)

@@ -27,9 +27,5 @@ For the time being, the following features are not yet implemented (but PRs or i
 
 - Logging system
 - CD pipeline that creates automated builds for Windows and macOS
-- Testing
-    - To build a system-level test (that tests the frozen binaries), we would need a --non-interactive flag for the
-      ConfigurationCommand
-    - We can mock e.g. a calendar provider to test the sync command (module-level test)
 - CI pipeline that runs tests
 - Automated dependency updates with Renovate Bot (once tests exist)

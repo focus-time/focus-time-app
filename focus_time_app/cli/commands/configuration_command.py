@@ -16,9 +16,11 @@ from focus_time_app.focus_time_calendar.event import CalendarType
 
 
 class ConfigurationCommand:
-    def __init__(self, configuration: Optional[ConfigurationV1], calendar_adapter: Optional[AbstractCalendarAdapter]):
+    def __init__(self, configuration: Optional[ConfigurationV1], calendar_adapter: Optional[AbstractCalendarAdapter],
+                 skip_background_scheduler_setup: bool):
         self._configuration = configuration
         self._calendar_adapter = calendar_adapter
+        self._skip_background_scheduler_setup = skip_background_scheduler_setup
 
     def run(self):
         if self._configuration and self._calendar_adapter:
@@ -73,7 +75,7 @@ class ConfigurationCommand:
 
         CommandExecutorImpl.install_dnd_helpers()
 
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, 'frozen', False) and not self._skip_background_scheduler_setup:
             BackgroundSchedulerImpl.install_or_repair_background_scheduler()
 
         Persistence.store_configuration(configuration)
