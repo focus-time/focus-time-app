@@ -1,0 +1,20 @@
+name: CI/CD
+
+on:
+#  push:
+#    branches: [ 'main' ]
+#  pull_request:
+#    branches: [ 'main' ]
+  workflow_dispatch:
+
+jobs:
+  build-windows-dnd-helper:
+    runs-on: windows-latest
+    steps:
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          msbuild-architecture: x64
+      - name: Build DND helper
+        run: msbuild windows-dnd-msvc\windows-dnd\windows-dnd.vcxproj -verbosity:diag -property:Configuration=Release
+
