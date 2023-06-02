@@ -44,7 +44,7 @@ class Persistence:
             Persistence._get_marker_file_path().unlink()
 
     @staticmethod
-    def _get_storage_directory() -> Path:
+    def get_storage_directory() -> Path:
         if getattr(sys, 'frozen', False):
             app_name = Persistence.APP_NAME
         else:
@@ -53,9 +53,9 @@ class Persistence:
         return Path(typer.get_app_dir(app_name, roaming=True))
 
     @staticmethod
-    def _get_marker_file_path() -> Path:
-        return Persistence._get_storage_directory() / Persistence.MARKER_FILE_NAME
+    def get_config_file_path() -> Path:
+        return Persistence.get_storage_directory() / Persistence.CONFIG_FILE_NAME
 
     @staticmethod
-    def get_config_file_path() -> Path:
-        return Persistence._get_storage_directory() / Persistence.CONFIG_FILE_NAME
+    def _get_marker_file_path() -> Path:
+        return Persistence.get_storage_directory() / Persistence.MARKER_FILE_NAME
