@@ -1,3 +1,5 @@
+import typer
+
 from cli.background_scheduler import BackgroundSchedulerImpl
 from command_execution import CommandExecutorImpl
 
@@ -6,3 +8,4 @@ class UninstallCommand:
     def run(self):
         CommandExecutorImpl.uninstall_dnd_helpers()
         BackgroundSchedulerImpl.uninstall_background_scheduler()
+        typer.echo("All scheduled background jobs and Do-Not-Disturb helpers were successfully uninstalled")

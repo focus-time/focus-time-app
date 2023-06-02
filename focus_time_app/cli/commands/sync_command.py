@@ -1,3 +1,5 @@
+import logging
+
 import typer
 
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
@@ -11,6 +13,7 @@ class SyncCommand:
     def __init__(self, configuration: ConfigurationV1, calendar_adapter: AbstractCalendarAdapter):
         self._calendar_adapter = calendar_adapter
         self._configuration = configuration
+        self._logger = logging.getLogger(type(self).__name__)
 
     def run(self):
         from_date, to_date = compute_calendar_query_start_and_stop(self._configuration)
@@ -20,7 +23,9 @@ class SyncCommand:
             if marker_file_exists:
                 typer.echo("Focus time is already active. Exiting ...")
             else:
-                typer.echo("Found a new focus time, calling start command(s) ...")
+                msg = "Found a new focus time, calling start command(s) ..."
+                typer.echo(msg)
+                self._logger.info(msg)
                 try:
                     CommandExecutorImpl.execute_commands(self._configuration.start_commands,
                                                          self._configuration.dnd_profile_name)
@@ -29,7 +34,9 @@ class SyncCommand:
 
         else:
             if marker_file_exists:
-                typer.echo("No focus time is active, calling stop command(s) ...")
+                msg = "No focus time is active, calling stop command(s) ..."
+                typer.echo(msg)
+                self._logger.info(msg)
                 try:
                     CommandExecutorImpl.execute_commands(self._configuration.stop_commands,
                                                          self._configuration.dnd_profile_name)
