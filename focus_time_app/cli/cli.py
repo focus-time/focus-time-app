@@ -73,7 +73,7 @@ def sync():
 
 
 @app.command()
-def start(duration: Annotated[int, typer.Option(min=1, help="")]):
+def start(duration: Annotated[int, typer.Argument(min=1, help="Length of the focus time session, in minutes")]):
     """
     Creates a new focus time calendar event in your calendar that starts now and ends in <duration> minutes. Also
     runs the 'sync' command internally, so that your start command(s) are immediately executed.
