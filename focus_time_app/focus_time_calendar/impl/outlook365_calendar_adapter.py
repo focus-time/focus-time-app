@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
 
 import marshmallow_dataclass
+import pytz
 import typer
 from O365 import Account
 from O365.calendar import Schedule, Calendar
@@ -66,8 +67,11 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
     def check_connection_and_credentials(self):
         if not self._outlook_configuration:
             raise ValueError("Cannot check connection, Outlook configuration is missing")
+        # Note: we set the "timezone=pytz.UTC" argument only to avoid PytzUsageWarning that point to
+        # https://pytz-deprecation-shim.readthedocs.io/en/latest/migration.html
+        # The issue is known (https://github.com/O365/python-o365/issues/753) but unlikely to be fixed soon
         self._account = Account(str(self._outlook_configuration.client_id), auth_flow_type="public",
-                                token_backend=self._backend)
+                                token_backend=self._backend, timezone=pytz.UTC)
         if not self._account.is_authenticated:
             raise RuntimeError("Unable to load auth token")
         schedule: Schedule = self._account.schedule()
