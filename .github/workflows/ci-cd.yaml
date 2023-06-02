@@ -20,4 +20,10 @@ jobs:
         run: |
           cd windows-dnd-msvc
           msbuild /property:Configuration=Release
+          Move-item -Path 'x64/Release/windows-dnd.exe' -destination '../' -force
+      - name: Upload DND helper executable
+        uses: actions/upload-artifact@v3
+        with:
+          name: dnd-helper-windows-exe
+          path: windows-dnd.exe
 
