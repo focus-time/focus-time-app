@@ -19,10 +19,14 @@ class WindowsCommandExecutor(AbstractCommandExecutor):
                              f"'{CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE}' are supported")
 
         for command in commands:
-            if command in [CommandExecutorConstants.DND_START_COMMAND, CommandExecutorConstants.DND_STOP_COMMAND]:
-                dnd_command = "set-priority-only" if command == CommandExecutorConstants.DND_START_COMMAND \
-                    else "set-off"
+            if command == CommandExecutorConstants.DND_START_COMMAND:
+                if dnd_profile_name == CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE:
+                    dnd_command = "set-priority-only"
+                else:
+                    dnd_command = "set-alarms-only"
                 self._run_dnd_helper_with_arg(dnd_command)
+            elif command == CommandExecutorConstants.DND_STOP_COMMAND:
+                self._run_dnd_helper_with_arg("set-off")
             else:
                 subprocess.check_call(command, shell=True)
 
