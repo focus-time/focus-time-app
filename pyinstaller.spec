@@ -7,7 +7,7 @@ block_cipher = None
 a = Analysis(
     ['focus_time_app\\main.py'],
     pathex=[],
-    binaries=[ ( 'resources/focus-time-app.shortcut', '.' ) ],
+    binaries=[ ( 'resources/focus-time-app.shortcut', '.' ), ( 'windows-dnd.exe', '.' ) ],
     datas=[],
     hiddenimports=[],
     hookspath=[],

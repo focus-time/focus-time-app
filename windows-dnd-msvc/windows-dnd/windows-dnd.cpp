@@ -46,8 +46,6 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 std::wstring profileUnrestricted = L"Microsoft.QuietHoursProfile.Unrestricted";
 std::wstring profilePriorityOnly = L"Microsoft.QuietHoursProfile.PriorityOnly";
 std::wstring profileAlarmsOnly = L"Microsoft.QuietHoursProfile.AlarmsOnly";
-std::wstring appId(L"app.focustime"); // Note: keep this in sync with the App ID defined in the package.json for Electron-Builder
-//std::wstring appId(L"MailClient");
 
 /*
 Call this program with one of the following codes:
@@ -60,10 +58,6 @@ Call this program with one of the following codes:
 "set-alarms-only": sets the quiet mode to "Alarms only". Returns 1 if something goes wrong, printing the last failed command.
 
 "set-off": disables the quiet mode. Returns 1 if something goes wrong, printing the last failed command.
-
-"add-app-exception": adds the AppId defined in the above constant to the list of priority apps.
-
-"remove-app-exception": removes the AppId defined in the above constant from the list of priority apps.
 */
 int main(int argc, char* argv[])
 {
@@ -114,42 +108,6 @@ int main(int argc, char* argv[])
 			std::cout << GetLastErrorAsString() << std::endl;
 			return 1;
 		}
-	}
-	else if (cmdOptionExists(argv, argv + argc, "add-app-exception") || cmdOptionExists(argv, argv + argc, "remove-app-exception")) {
-		CComPtr<IQuietHoursProfile> profile;
-		if (FAILED(quietHoursSettings->GetProfile(&profilePriorityOnly[0], &profile))) {
-			std::cout << "Unable to retrieve quiet hours profile object: " << GetLastErrorAsString();
-			return 1;
-		}
-		uint32_t count = 0;
-		CComHeapPtr<LPWSTR> apps;
-		if (FAILED(profile->GetAllowedApps(&count, &apps))) {
-			std::cout << "Unable to retrieve list of allowed apps: " << GetLastErrorAsString();
-			return 1;
-		}
-
-		if (cmdOptionExists(argv, argv + argc, "add-app-exception")) {
-			if (FAILED(profile->AddAllowedApp(&appId[0]))) {
-				std::cout << "Unable to add app exception: " << GetLastErrorAsString();
-				return 1;
-			}
-		}
-		else {
-			if (FAILED(profile->RemoveAllowedApp(&appId[0]))) {
-				std::cout << "Unable to remove app exception: " << GetLastErrorAsString();
-				return 1;
-			}
-		}
-
-
-		// Get list of allowed apps:
-		/*std::wcout << L"Allowed apps: " << std::endl;
-		for (uint32_t i = 0; i < count; i++)
-		{
-			CComHeapPtr<wchar_t> aumid; // Wrapped for CoTaskMemFree on scope exit
-			aumid.Attach(apps[i]);
-			std::wcout << static_cast<LPWSTR>(aumid) << std::endl;
-		}*/
 	}
 	else {
 		std::cout << "Call this application with a command!" << std::endl;
