@@ -41,8 +41,8 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
 
     def authenticate(self) -> Optional[Dict[str, Any]]:
         client_id: str = typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
-        self._account = Account(client_id, auth_flow_type='public', token_backend=self._backend)
-        if self._account.authenticate(scopes=['basic', 'calendar_all'], handle_consent=consent_input_token):
+        self._account = Account(client_id, auth_flow_type="public", token_backend=self._backend)
+        if self._account.authenticate(scopes=["basic", "calendar_all"], handle_consent=consent_input_token):
             typer.echo("Retrieving the list of calendars ...")
             schedule: Schedule = self._account.schedule()
             calendars = schedule.list_calendars()
@@ -66,7 +66,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
     def check_connection_and_credentials(self):
         if not self._outlook_configuration:
             raise ValueError("Cannot check connection, Outlook configuration is missing")
-        self._account = Account(str(self._outlook_configuration.client_id), auth_flow_type='public',
+        self._account = Account(str(self._outlook_configuration.client_id), auth_flow_type="public",
                                 token_backend=self._backend)
         if not self._account.is_authenticated:
             raise RuntimeError("Unable to load auth token")
@@ -75,8 +75,8 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
 
     def get_events(self, from_date: datetime, to_date: datetime) -> List[FocusTimeEvent]:
         schedule, calendar = self._get_schedule_and_calendar()
-        q = calendar.new_query('start').greater_equal(from_date).order_by('start', ascending=True)
-        q.chain('and').on_attribute('start').less_equal(to_date)
+        q = calendar.new_query("start").greater_equal(from_date).order_by("start", ascending=True)
+        q.chain("and").on_attribute("end").less_equal(to_date)
 
         events: List[FocusTimeEvent] = []
         o365_events = schedule.get_events(query=q)
@@ -106,9 +106,9 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
     def update_event(self, event: FocusTimeEvent, from_date: Optional[datetime] = None,
                      to_date: Optional[datetime] = None, reminder_in_minutes: Optional[int] = None):
         schedule, calendar = self._get_schedule_and_calendar()
-        q = calendar.new_query('start').greater_equal(event.start)
-        q.chain('and').on_attribute('end').less_equal(event.end)
-        q.chain('and').on_attribute('iCalUId').equals(event.id)
+        q = calendar.new_query("start").greater_equal(event.start)
+        q.chain("and").on_attribute("end").less_equal(event.end)
+        q.chain("and").on_attribute("iCalUId").equals(event.id)
 
         o365_events = list(schedule.get_events(query=q))
         if len(o365_events) != 1:

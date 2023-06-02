@@ -33,7 +33,7 @@ class AbstractCalendarAdapter(ABC):
     @abstractmethod
     def get_events(self, from_date: datetime, to_date: datetime) -> List[FocusTimeEvent]:
         """
-        Retrieves all focus time calendar events with a start date that is inbetween 'from_date' and 'to_date',
+        Retrieves all focus time calendar events with a start date >= 'from_date' and end date <= 'to_date',
         sorted by ascending start time.
         """
 
