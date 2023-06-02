@@ -25,7 +25,6 @@ For the time being, the following features are not yet implemented (but PRs or i
 
 ## TODOs
 
-- Logging system
 - CD pipeline that creates automated builds for Windows and macOS
 - CI pipeline that runs tests
 - Automated dependency updates with Renovate Bot (once tests exist)
