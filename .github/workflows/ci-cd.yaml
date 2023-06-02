@@ -16,5 +16,7 @@ jobs:
         with:
           msbuild-architecture: x64
       - name: Build DND helper
-        run: msbuild windows-dnd-msvc\windows-dnd\windows-dnd.vcxproj -verbosity:diag -property:Configuration=Release
+        run: |
+          cd windows-dnd-msvc
+          msbuild /property:Configuration=Release
 
