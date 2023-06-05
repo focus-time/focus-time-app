@@ -34,3 +34,8 @@ class AbstractCommandExecutor(ABC):
 
         :return:
         """
+
+    def is_dnd_active(self) -> bool:
+        """
+
+        """

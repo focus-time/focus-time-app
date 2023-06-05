@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import List
 
-from command_execution.abstract_command_executor import CommandExecutorConstants
+from focus_time_app.command_execution.abstract_command_executor import CommandExecutorConstants
 from focus_time_app.command_execution.abstract_command_executor import AbstractCommandExecutor
 
 
@@ -44,3 +44,7 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
 
     def uninstall_dnd_helpers(self):
         pass  # Does not seem to be possible - the "shortcuts" CLI has no remove/delete option!
+
+    def is_dnd_active(self) -> bool:
+        pass  # TODO call: defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes"
+        # it returns "1" or "0"

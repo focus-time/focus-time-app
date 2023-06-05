@@ -36,6 +36,12 @@ class WindowsCommandExecutor(AbstractCommandExecutor):
     def uninstall_dnd_helpers(self):
         pass  # Nothing to do
 
+    def is_dnd_active(self) -> bool:
+        output = self._run_dnd_helper_with_arg("get-profile")
+        if output not in ["priority-only", "alarms-only", "off"]:
+            raise RuntimeError(f"Unexpected reported Focus assist mode: {output}")
+        return output in ["priority-only", "alarms-only"]
+
     @staticmethod
     def _run_dnd_helper_with_arg(arg: str) -> str:
         if getattr(sys, 'frozen', False):
