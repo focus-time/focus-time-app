@@ -9,6 +9,9 @@ tell application "System Events" to tell process "Shortcuts"
 	#tell scroll area 1 of group 1 of window 1
 #		click button 2
 #	end tell
-    UI elements
+
+    tell window 1
+        UI elements
+    end tell
 
 end tell
