@@ -6,8 +6,9 @@ tell application "System Events" to tell process "Shortcuts"
 	set frontmost to true
 	delay 1
 
-	tell scroll area 1 of group 1 of window 1
-		click button 2
-	end tell
+	#tell scroll area 1 of group 1 of window 1
+#		click button 2
+#	end tell
+    UI elements
 
 end tell
