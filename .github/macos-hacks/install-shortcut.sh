@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 # Starts the Shortcuts app, it should show the dialog that asks the user to confirm installing the shortcut
 open resources/focus-time-app.shortcut
