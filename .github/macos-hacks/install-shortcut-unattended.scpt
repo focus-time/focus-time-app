@@ -7,7 +7,7 @@ tell application "System Events" to tell process "Shortcuts"
 	delay 1
 
 	tell scroll area 1 of window 1
-		click button 2
+		click button "Add Shortcut"
 	end tell
 
     #tell window 1
