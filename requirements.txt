@@ -6,3 +6,6 @@ keyring==23.13.1
 tendo==0.3.0
 pywin32==306; sys_platform == 'win32'
 pyinstaller==5.11.0
+pytest==7.3.1
+selenium==4.9.1
+chromedriver-autoinstaller==0.4.0

@@ -1,7 +1,7 @@
 import typer
 
-from cli.background_scheduler import BackgroundSchedulerImpl
-from command_execution import CommandExecutorImpl
+from focus_time_app.cli.background_scheduler import BackgroundSchedulerImpl
+from focus_time_app.command_execution import CommandExecutorImpl
 
 
 class UninstallCommand:

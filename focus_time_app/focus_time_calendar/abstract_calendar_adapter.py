@@ -55,3 +55,11 @@ class AbstractCalendarAdapter(ABC):
         :param to_date: new end date/time
         :param reminder_in_minutes: whether to configure a reminder
         """
+
+    @abstractmethod
+    def remove_event(self, event: FocusTimeEvent):
+        """
+        Deletes an existing focus time calendar event.
+
+        :param event: the event to delete
+        """

@@ -39,3 +39,8 @@ class AbstractCommandExecutor(ABC):
         """
 
         """
+
+    def set_dnd_active(self, active: bool, dnd_profile_name: str):
+        """
+
+        """

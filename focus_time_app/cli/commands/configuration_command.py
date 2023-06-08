@@ -69,11 +69,11 @@ class ConfigurationCommand:
 
         self._configure_start_and_stop_commands(configuration)
 
-        self._configure_dnd_profile_name(configuration)
-
         self._configure_event_reminders(configuration)
 
         CommandExecutorImpl.install_dnd_helpers()
+
+        self._configure_dnd_profile_name(configuration)
 
         if getattr(sys, 'frozen', False) and not self._skip_background_scheduler_setup:
             BackgroundSchedulerImpl.install_or_repair_background_scheduler()

@@ -1,4 +1,5 @@
 import sys
+from os import getenv
 from pathlib import Path
 
 import typer
@@ -45,7 +46,7 @@ class Persistence:
 
     @staticmethod
     def get_storage_directory() -> Path:
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, 'frozen', False) and getenv("CI", None) is None:
             app_name = Persistence.APP_NAME
         else:
             app_name = f"{Persistence.APP_NAME} - dev"

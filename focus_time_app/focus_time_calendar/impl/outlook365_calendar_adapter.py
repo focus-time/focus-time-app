@@ -6,7 +6,7 @@ import marshmallow_dataclass
 import pytz
 import typer
 from O365 import Account
-from O365.calendar import Schedule, Calendar
+from O365.calendar import Schedule, Calendar, Event
 from click import Choice
 
 from focus_time_app.configuration.configuration import ConfigurationV1, Outlook365ConfigurationV1
@@ -109,15 +109,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
 
     def update_event(self, event: FocusTimeEvent, from_date: Optional[datetime] = None,
                      to_date: Optional[datetime] = None, reminder_in_minutes: Optional[int] = None):
-        schedule, calendar = self._get_schedule_and_calendar()
-        q = calendar.new_query("start").greater_equal(event.start)
-        q.chain("and").on_attribute("end").less_equal(event.end)
-        q.chain("and").on_attribute("iCalUId").equals(event.id)
-
-        o365_events = list(schedule.get_events(query=q))
-        if len(o365_events) != 1:
-            raise RuntimeError(f"Got unexpected number of events ({len(o365_events)}), expected exactly one")
-        o365_event = o365_events[0]
+        o365_event = self._find_event(event)
         if from_date:
             o365_event.start = from_date
         if to_date:
@@ -131,6 +123,23 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         success = o365_event.save()
         if not success:
             raise RuntimeError("Something went wrong trying to update the Outlook 365 event")
+
+    def remove_event(self, event: FocusTimeEvent):
+        o365_event = self._find_event(event)
+        success = o365_event.delete()
+        if not success:
+            raise RuntimeError("Something went wrong trying to delete the Outlook 365 event")
+
+    def _find_event(self, event: FocusTimeEvent) -> Event:
+        schedule, calendar = self._get_schedule_and_calendar()
+        q = calendar.new_query("start").greater_equal(event.start)
+        q.chain("and").on_attribute("end").less_equal(event.end)
+        q.chain("and").on_attribute("iCalUId").equals(event.id)
+
+        o365_events = list(schedule.get_events(query=q))
+        if len(o365_events) != 1:
+            raise RuntimeError(f"Got unexpected number of events ({len(o365_events)}), expected exactly one")
+        return o365_events[0]
 
     def _get_schedule_and_calendar(self) -> Tuple[Schedule, Calendar]:
         if not self._account:
