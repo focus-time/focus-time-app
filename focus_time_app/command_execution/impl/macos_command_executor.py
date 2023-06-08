@@ -57,5 +57,10 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
         pass  # Does not seem to be possible - the "shortcuts" CLI has no remove/delete option!
 
     def is_dnd_active(self) -> bool:
-        pass  # TODO call: defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes"
-        # it returns "1" or "0"
+        result = subprocess.check_output('defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes"',
+                                         shell=True)
+        result = result.decode("utf-8")
+        if result not in ["0", "1"]:
+            raise RuntimeError(f"Unexpected result from 'defaults ...' command: {result}")
+
+        return result == "1"
