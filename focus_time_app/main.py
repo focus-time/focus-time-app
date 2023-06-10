@@ -16,6 +16,7 @@ from focus_time_app.utils.compatibility_checker import check_os_compatibility
 
 def configure_logging():
     log_file_path = Persistence.get_storage_directory() / "log.txt"
+    Persistence.get_storage_directory().mkdir(exist_ok=True)
     logging.basicConfig(
         handlers=[RotatingFileHandler(log_file_path, maxBytes=1024 * 1024 * 5, backupCount=2, encoding="utf-8")],
         level=logging.DEBUG,
