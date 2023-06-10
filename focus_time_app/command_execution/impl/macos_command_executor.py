@@ -31,7 +31,7 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
 
     def set_dnd_active(self, active: bool, dnd_profile_name: str):
         arg = "on" if active else "off"
-        subprocess.check_call(f"shortcuts '{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}' <<< {arg}",
+        subprocess.check_call(f"shortcuts run '{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}' <<< {arg}",
                               shell=True)
 
     @staticmethod
@@ -60,7 +60,7 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
     def is_dnd_active(self) -> bool:
         result = subprocess.check_output('defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes"',
                                          shell=True)
-        result = result.decode("utf-8")
+        result = result.decode("utf-8").rstrip('\n')
         if result not in ["0", "1"]:
             raise RuntimeError(f"Unexpected result from 'defaults ...' command: {result}")
 
