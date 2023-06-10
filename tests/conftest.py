@@ -47,6 +47,8 @@ def configured_cli_with_bg_jobs(request) -> ConfiguredCLI:
 def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup: bool) -> ConfigurationV1:
     # TODO add logging wherever it is useful
     reset_dnd_and_bg_scheduler()
+    if Persistence.ongoing_focustime_markerfile_exists():
+        Persistence.set_ongoing_focustime(ongoing=False)
 
     dnd_profile_name = CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE if sys.platform == "win32" \
         else "unused"
