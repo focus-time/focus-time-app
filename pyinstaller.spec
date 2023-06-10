@@ -1,14 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+import sys
 
 block_cipher = None
 
+datas = []
+if sys.platform == "win32":
+    datas.append(( 'windows-dnd.exe', '.' ))
+elif sys.platform == "darwin":
+    datas.append(( 'resources/focus-time-app.shortcut', '.' ))
 
 a = Analysis(
-    ['focus_time_app\\main.py'],
+    ['focus_time_app/main.py'],
     pathex=[],
-    binaries=[ ( 'resources/focus-time-app.shortcut', '.' ), ( 'windows-dnd.exe', '.' ) ],
-    datas=[],
+    binaries=[],
+    datas=datas,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
