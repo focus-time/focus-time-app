@@ -13,6 +13,8 @@ def check_os_compatibility():
             raise ValueError(f"The Focus Time App does not support your Windows version '{platform.release()}' which "
                              f"is too old")
     elif sys.platform == "darwin":
-        pass  # TODO somehow limit to Monterey (12) and newer
+        if LooseVersion(platform.mac_ver()[0]) < LooseVersion("12"):
+            raise ValueError(f"The Focus Time App does not support your macOS version '{platform.mac_ver()[0]}' which "
+                             f"is too old")
     else:
         raise ValueError(f"The Focus Time App does not support  your platform {sys.platform}")
