@@ -158,6 +158,11 @@ def get_outlook365_authorization_code_url(request_url: str) -> str:
     PASSWORDFIELD = (By.ID, "i0118")
     NEXTBUTTON = (By.ID, "idSIButton9")
 
+    email = getenv("OUTLOOK365_EMAIL", None)
+    password = getenv("OUTLOOK365_PASSWORD", None)
+    if email is None or password is None:
+        raise ValueError("Environment variables OUTLOOK365_EMAIL and OUTLOOK365_PASSWORD must be set")
+
     chromedriver_autoinstaller.install()
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
@@ -165,12 +170,12 @@ def get_outlook365_authorization_code_url(request_url: str) -> str:
     driver.get('https://login.live.com')
 
     # wait for email field and enter email
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(EMAILFIELD)).send_keys(getenv("OUTLOOK365_EMAIL"))
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(EMAILFIELD)).send_keys(email)
     # Click Next
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(NEXTBUTTON)).click()
 
     # wait for password field
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(PASSWORDFIELD)).send_keys(getenv("OUTLOOK365_PASSWORD"))
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(PASSWORDFIELD)).send_keys(password)
     # Click Next
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(NEXTBUTTON)).click()
 
