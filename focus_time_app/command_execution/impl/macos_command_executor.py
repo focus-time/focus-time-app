@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import List
 
@@ -58,6 +59,11 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
         pass  # Does not seem to be possible - the "shortcuts" CLI has no remove/delete option!
 
     def is_dnd_active(self) -> bool:
+        # On macOS, the on/off detection of the "defaults" command executed below is "slow".
+        # Because the is_dnd_active() method is only used in integration tests, the easiest fix is to sleep a bit,
+        # for the detection to catch up
+        time.sleep(10)
+
         result = subprocess.check_output('defaults read com.apple.controlcenter "NSStatusItem Visible FocusModes"',
                                          shell=True)
         result = result.decode("utf-8").rstrip('\n')
