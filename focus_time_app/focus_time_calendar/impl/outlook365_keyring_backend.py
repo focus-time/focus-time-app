@@ -96,23 +96,10 @@ class Outlook365KeyringBackend(BaseTokenBackend):
     @staticmethod
     def macos_credentials_hack():
         """
-        On macOS, the "focus-time" binary executed by the integration test creates an entry in the "login" keychain
-        that can only be read from the "focus-time" binary - trying to read it from the pytest "python" binary (done
-        to get the calendar adapter in the "configured_cli" fixture) results in an interactive prompt, which we want
-        to avoid. We can circumvent this by first creating a passwordless entry with the shell command below,
-        where the "-A" flag specifies that ALL applications may access the entry (without macOS showing any prompts).
+        Unsure whether this is needed: On macOS, the "focus-time" binary executed by the integration test creates an
+        entry in the "login" keychain that can only be read from the "focus-time" binary - trying to read it from the
+        pytest ("python" binary) results in an interactive prompt. If this becomes a problem in CI, we can circumvent
+        this by creating a passwordless entry with the command below. The "-A" flag specifies that ALL applications may
+        access the entry.
         """
-        if sys.platform == "darwin":
-            try:
-                if keyring.get_password(Outlook365KeyringBackend.SERVICE_NAME, Outlook365KeyringBackend.USERNAME):
-                    keyring.delete_password(Outlook365KeyringBackend.SERVICE_NAME, Outlook365KeyringBackend.USERNAME)
-            except:
-                raise ValueError(f"Unable to delete the existing macOS keyring entry "
-                                 f"'{Outlook365KeyringBackend.SERVICE_NAME}', you need to delete it manually")
-            subprocess.run([
-                "/usr/bin/security",
-                "add-generic-password",
-                "-a", Outlook365KeyringBackend.USERNAME,
-                "-s", Outlook365KeyringBackend.SERVICE_NAME,
-                "-A"
-            ], shell=False, check=True)
+        pass  # security add-generic-password -a FocusTimeApp -s FocusTimeApp -A
