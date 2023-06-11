@@ -1,5 +1,7 @@
 import json
+import logging
 import math
+import subprocess
 import sys
 from json import JSONDecodeError
 
@@ -21,6 +23,7 @@ class Outlook365KeyringBackend(BaseTokenBackend):
 
     def __init__(self):
         super().__init__()
+        self._logger = logging.getLogger(type(self).__name__)
 
     def load_token(self):
         if self.token:
@@ -43,9 +46,11 @@ class Outlook365KeyringBackend(BaseTokenBackend):
             try:
                 return json.loads(password_string)
             except Exception as e:
-                # TODO log
+                self._logger.warning("Unable to decode the JSON-encoded password string from the OS credentials "
+                                     f"manager: {e}")
                 if isinstance(e, JSONDecodeError):
                     self.delete_token()
+                    self._logger.warning("The existing password has been deleted")
                 return None
 
     def save_token(self):
