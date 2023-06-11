@@ -20,6 +20,7 @@ from focus_time_app.configuration.configuration import ConfigurationV1, Outlook3
 from focus_time_app.configuration.persistence import Persistence
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import CalendarType
+from focus_time_calendar.impl.outlook365_keyring_backend import Outlook365KeyringBackend
 from tests.test_utils import get_frozen_binary_path, get_configured_calendar_adapter, clean_calendar
 
 
@@ -49,6 +50,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
     reset_dnd_and_bg_scheduler()
     if Persistence.ongoing_focustime_markerfile_exists():
         Persistence.set_ongoing_focustime(ongoing=False)
+    Outlook365KeyringBackend.macos_credentials_hack()
 
     dnd_profile_name = CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE if sys.platform == "win32" \
         else "unused"
