@@ -13,6 +13,7 @@ from focus_time_app.configuration.persistence import Persistence
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.adapter_factory import create_calendar_adapter
 from focus_time_app.focus_time_calendar.event import CalendarType
+from focus_time_app.utils import is_production_environment
 
 
 class ConfigurationCommand:
@@ -75,7 +76,7 @@ class ConfigurationCommand:
 
         self._configure_dnd_profile_name(configuration)
 
-        if getattr(sys, 'frozen', False) and not self._skip_background_scheduler_setup:
+        if is_production_environment(ci_means_dev=False) and not self._skip_background_scheduler_setup:
             BackgroundSchedulerImpl.install_or_repair_background_scheduler()
 
         Persistence.store_configuration(configuration)

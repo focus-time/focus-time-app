@@ -5,6 +5,7 @@ from typing import List
 
 from focus_time_app.command_execution.abstract_command_executor import AbstractCommandExecutor
 from focus_time_app.command_execution.abstract_command_executor import CommandExecutorConstants
+from focus_time_app.utils import is_production_environment
 
 
 class WindowsCommandExecutor(AbstractCommandExecutor):
@@ -54,7 +55,7 @@ class WindowsCommandExecutor(AbstractCommandExecutor):
 
     @staticmethod
     def _run_dnd_helper_with_arg(arg: str) -> str:
-        if getattr(sys, 'frozen', False):
+        if is_production_environment(ci_means_dev=False):
             path = str(Path(sys.executable).parent / WindowsCommandExecutor.DND_HELPER_BINARY_NAME)
         else:
             path = str(Path(__file__).parent.parent.parent.parent / WindowsCommandExecutor.DND_HELPER_BINARY_NAME)

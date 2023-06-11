@@ -8,6 +8,7 @@ import typer
 
 from focus_time_app.command_execution.abstract_command_executor import AbstractCommandExecutor
 from focus_time_app.command_execution.abstract_command_executor import CommandExecutorConstants
+from focus_time_app.utils import is_production_environment
 
 
 class MacOsCommandExecutor(AbstractCommandExecutor):
@@ -46,7 +47,7 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
                      "start and stop Focus sessions on macOS. "
                      "Once you press Enter, a dialog opens in which you have to press the 'Add Shortcut' button.",
                      default='', prompt_suffix='\n')
-        if getattr(sys, 'frozen', False):
+        if is_production_environment(ci_means_dev=False):
             path = str(Path(sys.executable).parent
                        / f"{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}.shortcut")
         else:

@@ -5,6 +5,7 @@ from copy import copy
 from pathlib import Path
 
 from focus_time_app.cli.background_scheduler.abstract_background_scheduler import AbstractBackgroundScheduler
+from focus_time_app.utils import is_production_environment
 
 
 class MacOsBackgroundScheduler(AbstractBackgroundScheduler):
@@ -24,7 +25,7 @@ class MacOsBackgroundScheduler(AbstractBackgroundScheduler):
 
         plist_dict = copy(self.LAUNCHD_AGENT_DICT)
 
-        if getattr(sys, "frozen", False):
+        if is_production_environment(ci_means_dev=False):
             plist_dict["ProgramArguments"] = [sys.executable, "sync"]
         else:
             plist_dict["ProgramArguments"] = [sys.executable, "focus_time_app/main.py", "sync"]

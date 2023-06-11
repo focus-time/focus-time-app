@@ -8,10 +8,12 @@ from O365.utils import BaseTokenBackend
 import keyring
 from keyring.errors import PasswordDeleteError
 
+from focus_time_app.utils import is_production_environment
+
 
 class Outlook365KeyringBackend(BaseTokenBackend):
-    SERVICE_NAME = "FocusTimeApp"  # TODO: should differentiate between prod (frozen) and dev mode
-    USERNAME = "FocusTimeApp"
+    SERVICE_NAME = "FocusTimeApp" if is_production_environment(ci_means_dev=True) else "FocusTimeApp-Dev"
+    USERNAME = "FocusTimeApp" if is_production_environment(ci_means_dev=True) else "FocusTimeApp-Dev"
     PASSWORD_LENGTH_LIMITATION = {
         "win32": 500,
         "darwin": 0  # unlimited

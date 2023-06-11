@@ -1,11 +1,10 @@
-import sys
-from os import getenv
 from pathlib import Path
 
 import typer
 import yaml
 
 from focus_time_app.configuration.configuration import ConfigurationV1, ConfigurationV1Schema
+from focus_time_app.utils import is_production_environment
 
 configuration_v1_schema = ConfigurationV1Schema()
 
@@ -46,7 +45,7 @@ class Persistence:
 
     @staticmethod
     def get_storage_directory() -> Path:
-        if getattr(sys, 'frozen', False) and getenv("CI", None) is None:
+        if is_production_environment():
             app_name = Persistence.APP_NAME
         else:
             app_name = f"{Persistence.APP_NAME} - dev"
