@@ -4,6 +4,9 @@ inputs:
   frozen-archive-name:
     description: "Name of the zip file to be created and published that contains the frozen application"
     default: "release.zip"
+  dist-app-dir:
+    description: "Relative path to the directory that contains the frozen app built by PyInstaller"
+    default: "dist/focus-time"
   os:
     required: true
 runs:
@@ -24,10 +27,10 @@ runs:
       uses: thedoctor0/zip-release@0.7.1
       with:
         type: "zip"
-        directory: "dist/focus-time"
+        directory:  ${{ inputs.dist-app-dir }}
         filename: ${{ inputs.frozen-archive-name }}
     - name: Upload zip archive
       uses: actions/upload-artifact@v3
       with:
         name: frozen-app
-        path: ${{ inputs.frozen-archive-name }}
+        path: ${{ format('{0}/{1}', inputs.dist-app-dir, inputs.frozen-archive-name) }}
