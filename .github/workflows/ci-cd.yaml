@@ -11,7 +11,7 @@ jobs:
   ci-cd:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     # only run one job at a time, because the integration-test steps would otherwise interfere with each other
     concurrency: integration-test
