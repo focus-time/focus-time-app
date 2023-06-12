@@ -1,0 +1,20 @@
+name: "Build Windows DND helper binary"
+description: "Uses MS Visual Studio to build the windows-dnd.exe file from the source code found in <root>/windows-dnd-msvc"
+runs:
+  using: "composite"
+  steps:
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        msbuild-architecture: x64
+    - name: Build DND helper and overwrite committed binary
+      run: |
+        cd windows-dnd-msvc
+        msbuild /property:Configuration=Release
+        Move-item -Path 'x64/Release/windows-dnd.exe' -destination '../' -force
+      shell: pwsh
+    - name: Upload DND helper executable  # For debugging purposes
+      uses: actions/upload-artifact@v3
+      with:
+        name: dnd-helper-windows-exe
+        path: windows-dnd.exe

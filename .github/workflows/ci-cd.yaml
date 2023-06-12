@@ -1,29 +1,38 @@
 name: CI/CD
 
 on:
-#  push:
-#    branches: [ 'main' ]
-#  pull_request:
-#    branches: [ 'main' ]
+  #  push:
+  #    branches: [ 'main' ]
+  #  pull_request:
+  #    branches: [ 'main' ]
   workflow_dispatch:
 
 jobs:
-  build-windows-dnd-helper:
-    runs-on: windows-latest
+  ci-cd:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
-        with:
-          msbuild-architecture: x64
-      - name: Build DND helper
-        run: |
-          cd windows-dnd-msvc
-          msbuild /property:Configuration=Release
-          Move-item -Path 'x64/Release/windows-dnd.exe' -destination '../' -force
-      - name: Upload DND helper executable
-        uses: actions/upload-artifact@v3
-        with:
-          name: dnd-helper-windows-exe
-          path: windows-dnd.exe
 
+      - uses: ./.github/actions/build-windows-dnd-helper
+        if: matrix.os == "windows-latest"
+
+      - uses: ./.github/actions/build-app
+
+      - name: Run integration tests
+        # For now, we only run tests on Windows, because currently, on macOS, we cannot get the unattended installation
+        # of the DND helper to work:
+        # - On the stable macOS 12 runner OS, the Shortcuts app cannot be controlled using AppleScript, for unknown reasons
+        # - On the still-in-beta macOS 13 runner OS, the Shortcut app can be controlled, but the  macOS 13 does not
+        #   support AppleScript yet, see https://github.com/actions/runner-images/issues/7531
+        if: matrix.os == "windows-latest"
+        run: |
+          pytest tests
+        env:
+          CI: "1"
+          OUTLOOK365_EMAIL: ${{ secrets.OUTLOOK365_EMAIL }}
+          OUTLOOK365_PASSWORD: ${{ secrets.OUTLOOK365_PASSWORD }}
+
+      # TODO: Create GitHub release with https://github.com/softprops/action-gh-release for Git tags
