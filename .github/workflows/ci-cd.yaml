@@ -20,6 +20,8 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       - uses: ./.github/actions/build-app
+        with:
+          os: ${{ matrix.os }}
 
       - name: Run integration tests
         # For now, we only run tests on Windows, because currently, on macOS, we cannot get the unattended installation

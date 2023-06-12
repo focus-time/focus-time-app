@@ -4,6 +4,8 @@ inputs:
   frozen-archive-name:
     description: "Name of the zip file to be created and published that contains the frozen application"
     default: "release.zip"
+  os:
+    required: true
 runs:
   using: "composite"
   steps:
@@ -17,6 +19,7 @@ runs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pyinstaller pyinstaller.spec
+      shell: ${{ inputs.os == 'windows-latest' && 'powershell' || 'bash' }}
     - name: Create zip archive of frozen app
       uses: thedoctor0/zip-release@0.7.1
       with:
