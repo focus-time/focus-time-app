@@ -1,6 +1,7 @@
 import datetime
 import logging
 import sys
+from pathlib import Path
 
 import win32com.client
 from win32com.universal import com_error
@@ -11,9 +12,13 @@ from focus_time_app.cli.background_scheduler.abstract_background_scheduler impor
 class WindowsBackgroundScheduler(AbstractBackgroundScheduler):
     """
     Windows COM-based implementation that creates background jobs using Windows' "task scheduler" feature.
+
+    To avoid that a console window pops up every minute, SilentCMD is used, see
+    https://github.com/stbrenner/SilentCMD/releases/tag/v1.4
     """
 
     TASK_NAME = "Focus Time App Synchronization Trigger"
+    SILENT_CMD_BINARY = "SilentCMD.exe"
 
     def __init__(self):
         self._scheduler = win32com.client.Dispatch("Schedule.Service")
@@ -50,7 +55,8 @@ class WindowsBackgroundScheduler(AbstractBackgroundScheduler):
         action = task_def.Actions.Create(0)  # 0 means to execute a command
         action.ID = "Trigger sync"
         action.Path = sys.executable
-        action.Arguments = "sync"
+        action.Path = str(Path(sys.executable).parent / self.SILENT_CMD_BINARY)
+        action.Arguments = f"{sys.executable} sync"
 
         # Set parameters
         task_def.RegistrationInfo.Description = "Triggers the Focus Time App synchronization mechanism"
