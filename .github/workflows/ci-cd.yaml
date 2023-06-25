@@ -17,7 +17,9 @@ jobs:
       matrix:
         os: [ macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
-    # only run one job at a time, because the integration-test steps would otherwise interfere with each other
+    # only run one job per OS at a time, because there could be several pipelines running concurrently, and without
+    # the "concurrency" trick, the integration-tests would interfere with each other
+    concurrency: integration-test-${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
 
