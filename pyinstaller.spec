@@ -5,7 +5,7 @@ block_cipher = None
 
 datas = []
 if sys.platform == "win32":
-    datas.append(( 'windows-dnd.exe', 'SilentCMD.exe', '.' ))
+    datas.append(( 'windows-dnd.exe', '.' ), ( 'SilentCMD.exe', '.' ))
 elif sys.platform == "darwin":
     datas.append(( 'resources/focus-time-app.shortcut', '.' ))
 
