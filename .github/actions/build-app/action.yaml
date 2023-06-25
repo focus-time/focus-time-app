@@ -1,13 +1,11 @@
 name: "Build frozen app"
 description: "Builds the app with PyInstaller, zips it and uploads it as artifact"
 inputs:
-  frozen-archive-name:
-    description: "Name of the zip file to be created and published that contains the frozen application"
-    default: "release.zip"
   dist-app-dir:
     description: "Relative path to the directory that contains the frozen app built by PyInstaller"
     default: "dist/focus-time"
   os:
+    description: "Name of the runner's OS"
     required: true
 runs:
   using: "composite"
@@ -23,14 +21,27 @@ runs:
         pip install -r requirements.txt
         pyinstaller pyinstaller.spec
       shell: ${{ inputs.os == 'windows-latest' && 'powershell' || 'bash' }}
+    - name: Compute Filename
+      id: release_filename
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const os = '${{ inputs.os }}';
+          const ref = '${{ github.ref }}';
+          const osName = os.replace('-latest', '');
+          const refFinalPart = ref.split('/').pop();
+          const filename = `focus-time-app-${osName}-${refFinalPart}.zip`;
+          return filename;
+        result-encoding: string
     - name: Create zip archive of frozen app
       uses: thedoctor0/zip-release@0.7.1
       with:
         type: "zip"
         directory:  ${{ inputs.dist-app-dir }}
-        filename: ${{ inputs.frozen-archive-name }}
+        filename: ${{ steps.release_filename.outputs.result }}
     - name: Upload zip archive
       uses: actions/upload-artifact@v3
       with:
         name: ${{ format('frozen-app-{0}', inputs.os) }}
-        path: ${{ format('{0}/{1}', inputs.dist-app-dir, inputs.frozen-archive-name) }}
+        path: ${{ format('{0}/{1}', inputs.dist-app-dir, steps.release_filename.outputs.result) }}
+        retention-days: 7
