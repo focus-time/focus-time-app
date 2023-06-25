@@ -1,4 +1,5 @@
 import datetime
+import logging
 import sys
 
 import win32com.client
@@ -18,9 +19,12 @@ class WindowsBackgroundScheduler(AbstractBackgroundScheduler):
         self._scheduler = win32com.client.Dispatch("Schedule.Service")
         self._scheduler.Connect()
         self._root_folder = self._scheduler.GetFolder('\\')
+        self._logger = logging.getLogger(type(self).__name__)
 
     def install_or_repair_background_scheduler(self):
         self.uninstall_background_scheduler()
+        self._create_trigger_sync_task()
+        self._logger.info(f"Successfully configured a scheduled Windows task, see '{self.TASK_NAME}' in Task Scheduler")
 
     def uninstall_background_scheduler(self):
         if self._trigger_sync_task_exists():
