@@ -23,8 +23,28 @@ For the time being, the following features are not yet implemented (but PRs or i
 - Linux support
 - Analytics of focus time events
 
-## TODOs
+## Coding TODOs
 
-- CD pipeline that creates automated builds for Windows and macOS
-- CI pipeline that runs tests
-- Automated dependency updates with Renovate Bot (once tests exist)
+- Test automated releases on both platforms
+- Fix calendar helper for unit tests so that it uses its own credentials --> fixes manual E2E tests on macOS
+- Automated dependency updates with Renovate Bot
+- Version must be added to the code and the CLI's help text
+- Implement other integration tests
+- Once macOS 13 runners can handle AppleScript:
+  - Prepare separate Outlook calendars for each OS, use them
+  - Run CI tests on macOS
+
+## Considerations for system level tests
+
+- Cases:
+  - sync: background job triggers on-off
+    - configuration is run with enabled BG job
+    - create an event 1 minute in the future, lasts 2 minutes
+    - verify that DND is off
+    - wait for 1 minute
+    - verify that DND is on
+    - wait for 2 minutes
+    - verify that DND is off
+  - start: TODO
+  - stop: TODO
+  - uninstall: TODO
