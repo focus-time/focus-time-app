@@ -9,6 +9,21 @@ For now, only Outlook 365 calendars are supported.
 
 TODO create docs for other sections (Installation & Usage, Contributing, Roadmap)
 
+Running on macOS:
+- Unpack, then double click the focus-time binary, it will fail, macOS will show a message such as 
+- "“focus-time” cannot be opened because it is from an unidentified developer." or "“focus-time” can’t be opened because Apple cannot check it for malicious software." if you run it from the Terminal
+- On macOS 12, go to System settings -> Security control pane -> General tab.
+- On macOS 13, go to System settings -> Privacy & Security
+- Look for a message such as "focus-time" was blocked from use because it is not from an identified developer
+- CLick the "Allow anyway" button
+- Now run it from the Terminal, there will still be a pop-up, but it has an Open button
+- Another error message might appear that warns you about Python being from an unidentified developer. Go to system settings again and allow it
+
+It's probably easier to just have people build the app themselves, and exclude the macOS zip from the release
+
+For future reference:
+https://federicoterzi.com/blog/automatic-code-signing-and-notarization-for-macos-apps-using-github-actions/
+
 ## Out of scope
 
 For the time being, the following features are not yet implemented (but PRs or issues are welcome):
