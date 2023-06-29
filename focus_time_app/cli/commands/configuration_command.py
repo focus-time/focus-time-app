@@ -76,7 +76,7 @@ class ConfigurationCommand:
 
         self._configure_dnd_profile_name(configuration)
 
-        if is_production_environment(ci_means_dev=False) and not self._skip_background_scheduler_setup:
+        if is_production_environment() and not self._skip_background_scheduler_setup:
             BackgroundSchedulerImpl.install_or_repair_background_scheduler()
 
         Persistence.store_configuration(configuration)

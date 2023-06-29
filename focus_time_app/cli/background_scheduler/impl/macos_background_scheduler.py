@@ -25,7 +25,7 @@ class MacOsBackgroundScheduler(AbstractBackgroundScheduler):
 
         plist_dict = copy(self.LAUNCHD_AGENT_DICT)
 
-        if is_production_environment(ci_means_dev=False):
+        if is_production_environment():
             plist_dict["ProgramArguments"] = [sys.executable, "sync"]
         else:
             plist_dict["ProgramArguments"] = [sys.executable, "focus_time_app/main.py", "sync"]

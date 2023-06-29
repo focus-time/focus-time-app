@@ -20,7 +20,11 @@ from focus_time_app.configuration.configuration import ConfigurationV1, Outlook3
 from focus_time_app.configuration.persistence import Persistence
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import CalendarType
+from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import Outlook365CalendarAdapter, \
+    Outlook365TestingOverrides
 from tests.test_utils import get_frozen_binary_path, get_configured_calendar_adapter, clean_calendar
+
+OUTLOOK365_TEST_CLIENT_ID = "bcc815bb-01d0-4765-ae14-e2bf0ee22445"
 
 
 def write_line_to_stream(stream: IO, input: Any):
@@ -110,7 +114,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
                                            f"Stdout output:\n{stdout}\n" \
                                            f"Stderr output:\n{stderr}"
 
-    calendar_adapter = get_configured_calendar_adapter(configuration=config)
+    calendar_adapter = get_configured_calendar_adapter_for_testing(config)
     clean_calendar(configuration=config, calendar_adapter=calendar_adapter)
 
     yield ConfiguredCLI(configuration=config, calendar_adapter=calendar_adapter)
@@ -130,8 +134,7 @@ def configure_outlook365_calendar_adapter(config_process: Popen, config: Configu
     Requires the environment variables OUTLOOK365_EMAIL and OUTLOOK365_PASSWORD to be set for the corresponding
     Microsoft 365 account (whose owner must already have granted permission to the Client ID used below).
     """
-    adapter_configuration = Outlook365ConfigurationV1(client_id="bcc815bb-01d0-4765-ae14-e2bf0ee22445",
-                                                      calendar_name="Calendar")
+    adapter_configuration = Outlook365ConfigurationV1(client_id=OUTLOOK365_TEST_CLIENT_ID, calendar_name="Calendar")
 
     write_line_to_stream(config_process.stdin, "1")  # Use Outlook
     out = config_process.stdout.readline()  # asks for Client ID
@@ -184,3 +187,29 @@ def get_outlook365_authorization_code_url(request_url: str) -> str:
     driver.get(request_url)
     WebDriverWait(driver, 10).until(EC.url_matches("https://login.microsoftonline.com/common/oauth2/nativeclient"))
     return driver.current_url
+
+
+def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) -> AbstractCalendarAdapter:
+    """
+    Creates a dedicated calendar adapter for the automated test. This is particularly necessary because on macOS,
+    there are issues with the Keychain access, which make it impossible to "reuse" the credentials created by the
+    frozen focus-time app that being tested: in general, the credentials created in a keychain by app #A (e.g. the
+    frozen focus-time binary) cannot be read by any other apps #B (e.g. Python running pytest).
+    """
+    def _get_authorization_code(consent_url: str) -> str:
+        return get_outlook365_authorization_code_url(consent_url)
+
+    if configuration.calendar_type is CalendarType.Outlook365:
+        testing_overrides = Outlook365TestingOverrides(
+            handle_consent_callback=_get_authorization_code,
+            namespace="ci-runner",
+            client_id=OUTLOOK365_TEST_CLIENT_ID,
+            calendar_name="Calendar"
+        )
+        adapter = Outlook365CalendarAdapter(configuration=configuration, testing_overrides=testing_overrides)
+        adapter.authenticate()
+    else:
+        raise NotImplementedError
+
+    adapter.check_connection_and_credentials()
+    return adapter

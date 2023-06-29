@@ -55,7 +55,7 @@ class WindowsCommandExecutor(AbstractCommandExecutor):
 
     @staticmethod
     def _run_dnd_helper_with_arg(arg: str) -> str:
-        if is_production_environment(ci_means_dev=False):
+        if is_production_environment():
             path = str(Path(sys.executable).parent / WindowsCommandExecutor.DND_HELPER_BINARY_NAME)
         else:
             path = str(Path(__file__).parent.parent.parent.parent / WindowsCommandExecutor.DND_HELPER_BINARY_NAME)

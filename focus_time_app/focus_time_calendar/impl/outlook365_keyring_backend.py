@@ -1,28 +1,28 @@
 import json
 import logging
 import math
-import subprocess
 import sys
 from json import JSONDecodeError
-
-from O365.utils import BaseTokenBackend
+from typing import Optional
 
 import keyring
+from O365.utils import BaseTokenBackend
 from keyring.errors import PasswordDeleteError
 
-from focus_time_app.utils import is_production_environment
+from focus_time_app.utils import get_environment_suffix
 
 
 class Outlook365KeyringBackend(BaseTokenBackend):
-    SERVICE_NAME = "FocusTimeApp" if is_production_environment(ci_means_dev=True) else "FocusTimeApp-Dev"
-    USERNAME = "FocusTimeApp" if is_production_environment(ci_means_dev=True) else "FocusTimeApp-Dev"
     PASSWORD_LENGTH_LIMITATION = {
         "win32": 500,
         "darwin": 0  # unlimited
     }
 
-    def __init__(self):
+    def __init__(self, namespace_override: Optional[str] = None):
         super().__init__()
+        namespace_suffix = f"-{namespace_override}" if namespace_override else get_environment_suffix()
+        self._SERVICE_NAME = "FocusTimeApp" + namespace_suffix
+        self._USERNAME = "FocusTimeApp" + namespace_suffix
         self._logger = logging.getLogger(type(self).__name__)
 
     def load_token(self):
@@ -33,14 +33,12 @@ class Outlook365KeyringBackend(BaseTokenBackend):
         password_string = ""
         if pw_length_limit:
             for i in range(999999):
-                password_substring = keyring.get_password(Outlook365KeyringBackend.SERVICE_NAME,
-                                                          f"{Outlook365KeyringBackend.USERNAME}-{i}")
+                password_substring = keyring.get_password(self._SERVICE_NAME, f"{self._USERNAME}-{i}")
                 if not password_substring:
                     break
                 password_string += password_substring
         else:
-            password_string = keyring.get_password(Outlook365KeyringBackend.SERVICE_NAME,
-                                                   Outlook365KeyringBackend.USERNAME)
+            password_string = keyring.get_password(self._SERVICE_NAME, self._USERNAME)
 
         if password_string:
             try:
@@ -64,19 +62,15 @@ class Outlook365KeyringBackend(BaseTokenBackend):
             offset = 0
             for offset in range(math.ceil(len(password_string) / pw_length_limit)):
                 password_subset = password_string[offset * pw_length_limit: offset * pw_length_limit + pw_length_limit]
-                keyring.set_password(Outlook365KeyringBackend.SERVICE_NAME,
-                                     f"{Outlook365KeyringBackend.USERNAME}-{offset}",
-                                     password_subset)
+                keyring.set_password(self._SERVICE_NAME, f"{self._USERNAME}-{offset}", password_subset)
 
             # Make sure to break the sequence of older (not-properly deleted) passwords, if they exist
             try:
-                keyring.delete_password(Outlook365KeyringBackend.SERVICE_NAME,
-                                        f"{Outlook365KeyringBackend.USERNAME}-{offset + 1}")
+                keyring.delete_password(self._SERVICE_NAME, f"{self._USERNAME}-{offset + 1}")
             except PasswordDeleteError:
                 pass
         else:
-            keyring.set_password(Outlook365KeyringBackend.SERVICE_NAME, Outlook365KeyringBackend.USERNAME,
-                                 password_string)
+            keyring.set_password(self._SERVICE_NAME, self._USERNAME, password_string)
 
         return True
 
@@ -84,14 +78,12 @@ class Outlook365KeyringBackend(BaseTokenBackend):
         pw_length_limit = Outlook365KeyringBackend.PASSWORD_LENGTH_LIMITATION[sys.platform]
         if pw_length_limit:
             for i in range(999999):
-                password_substring = keyring.get_password(Outlook365KeyringBackend.SERVICE_NAME,
-                                                          f"{Outlook365KeyringBackend.USERNAME}-{i}")
+                password_substring = keyring.get_password(self._SERVICE_NAME, f"{self._USERNAME}-{i}")
                 if not password_substring:
                     break
-                keyring.delete_password(Outlook365KeyringBackend.SERVICE_NAME,
-                                        f"{Outlook365KeyringBackend.USERNAME}-{i}")
+                keyring.delete_password(self._SERVICE_NAME, f"{self._USERNAME}-{i}")
         else:
-            keyring.delete_password(Outlook365KeyringBackend.SERVICE_NAME, Outlook365KeyringBackend.USERNAME)
+            keyring.delete_password(self._SERVICE_NAME, self._USERNAME)
 
     @staticmethod
     def macos_credentials_hack():

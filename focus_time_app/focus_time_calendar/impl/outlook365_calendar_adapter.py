@@ -1,6 +1,7 @@
 import os
+from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any, Tuple, Callable
 
 import marshmallow_dataclass
 import pytz
@@ -13,6 +14,14 @@ from focus_time_app.configuration.configuration import ConfigurationV1, Outlook3
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 from focus_time_app.focus_time_calendar.impl.outlook365_keyring_backend import Outlook365KeyringBackend
+
+
+@dataclass
+class Outlook365TestingOverrides:
+    handle_consent_callback: Callable[[str], str]
+    namespace: str
+    client_id: str
+    calendar_name: str
 
 
 def consent_input_token(consent_url: str):
@@ -31,19 +40,26 @@ outlook_configuration_v1_schema = marshmallow_dataclass.class_schema(Outlook365C
 
 class Outlook365CalendarAdapter(AbstractCalendarAdapter):
 
-    def __init__(self, configuration: ConfigurationV1):
+    def __init__(self, configuration: ConfigurationV1, testing_overrides: Optional[Outlook365TestingOverrides] = None):
         self._configuration = configuration
+        self._testing_overrides = testing_overrides
         self._outlook_configuration: Optional[Outlook365ConfigurationV1] = None
         if configuration.adapter_configuration is not None:
             self._outlook_configuration: Outlook365ConfigurationV1 = outlook_configuration_v1_schema.load(
                 configuration.adapter_configuration)
         self._account: Optional[Account] = None
-        self._backend = Outlook365KeyringBackend()
+        namespace_override = None if testing_overrides is None else testing_overrides.namespace
+        self._backend = Outlook365KeyringBackend(namespace_override)
 
     def authenticate(self) -> Optional[Dict[str, Any]]:
-        client_id: str = typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
+        client_id_override = None if self._testing_overrides is None else self._testing_overrides.client_id
+        client_id: str = client_id_override or \
+                         typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
         self._account = Account(client_id, auth_flow_type="public", token_backend=self._backend)
-        if self._account.authenticate(scopes=["basic", "calendar_all"], handle_consent=consent_input_token):
+        handle_consent_callback = consent_input_token if self._testing_overrides is None \
+            else self._testing_overrides.handle_consent_callback
+        if self._account.authenticate(scopes=["basic", "calendar_all"],
+                                      handle_consent=handle_consent_callback):
             typer.echo("Retrieving the list of calendars ...")
             schedule: Schedule = self._account.schedule()
             calendars = schedule.list_calendars()
@@ -54,10 +70,13 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
                 calendar_name = calendars[0].name
                 typer.echo(f"Found only one calendar named '{calendar_name}', which will be chosen")
             else:
-                calendar_names = [calendar.name for calendar in calendars]
-                name_choice = Choice(calendar_names)
-                calendar_name = typer.prompt("Please provide the name of your calendar", type=name_choice,
-                                             prompt_suffix='\n')
+                if self._testing_overrides is not None:
+                    calendar_name = self._testing_overrides.calendar_name
+                else:
+                    calendar_names = [calendar.name for calendar in calendars]
+                    name_choice = Choice(calendar_names)
+                    calendar_name = typer.prompt("Please provide the name of your calendar", type=name_choice,
+                                                 prompt_suffix='\n')
 
             self._outlook_configuration = Outlook365ConfigurationV1(client_id=client_id, calendar_name=calendar_name)
             return outlook_configuration_v1_schema.dump(self._outlook_configuration)

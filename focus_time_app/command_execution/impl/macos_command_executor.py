@@ -47,7 +47,7 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
                      "start and stop Focus sessions on macOS. "
                      "Once you press Enter, a dialog opens in which you have to press the 'Add Shortcut' button.",
                      default='', prompt_suffix='\n')
-        if is_production_environment(ci_means_dev=False):
+        if is_production_environment():
             path = str(Path(sys.executable).parent
                        / f"{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}.shortcut")
         else:

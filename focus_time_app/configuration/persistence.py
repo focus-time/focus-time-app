@@ -4,7 +4,7 @@ import typer
 import yaml
 
 from focus_time_app.configuration.configuration import ConfigurationV1, ConfigurationV1Schema
-from focus_time_app.utils import is_production_environment
+from focus_time_app.utils import get_environment_suffix
 
 configuration_v1_schema = ConfigurationV1Schema()
 
@@ -45,11 +45,7 @@ class Persistence:
 
     @staticmethod
     def get_storage_directory() -> Path:
-        if is_production_environment():
-            app_name = Persistence.APP_NAME
-        else:
-            app_name = f"{Persistence.APP_NAME} - dev"
-
+        app_name = Persistence.APP_NAME + get_environment_suffix()
         return Path(typer.get_app_dir(app_name, roaming=True))
 
     @staticmethod
