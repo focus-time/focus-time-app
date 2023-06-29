@@ -168,7 +168,8 @@ def get_outlook365_authorization_code_url(request_url: str) -> str:
     if email is None or password is None:
         raise ValueError("Environment variables OUTLOOK365_EMAIL and OUTLOOK365_PASSWORD must be set")
 
-    chromedriver_autoinstaller.install()
+    # seems broken, see https://github.com/focus-time/focus-time-app/actions/runs/5411152131/jobs/9833539429
+    # chromedriver_autoinstaller.install()
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     driver = webdriver.Chrome(options=options)
