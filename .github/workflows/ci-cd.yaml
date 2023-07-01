@@ -53,12 +53,11 @@ jobs:
         uses: actions/checkout@v3
       - name: Download all releases
         uses: actions/download-artifact@v3
-      # The download job creates a separate folder for every release, so we e.g.
-      # have frozen-app-macos-latest/focus-time-app-macos-v0.1.1.zip and therefore need a wide glob below for the
+      # The download job creates a separate folder for every release, resulting in files such as
+      # "frozen-app-macos-latest/focus-time-app-macos-v0.1.1.zip". Therefore, need a wide glob below for the
       # Release job
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           files: "**/focus-time-*.zip"
-          prerelease: true
           generate_release_notes: true
