@@ -1,65 +1,108 @@
 # focus-time-app
 
-A CLI tool for macOS and Windows that triggers your desktop OS's Focus Mode feature (and calls binary shell commands you
-can specify), based on blocker events on your calendar.
+The **Focus time app** is a _CLI_ tool for macOS and Windows that regularly checks your calendar for "focus time"
+blocker events. Whenever such events begin or end, it triggers your desktop OS's Focus Mode feature, or calls binary
+shell commands that you can configure.
 
-For now, only Outlook 365 calendars are supported.
+It saves you from having to _manually_ start or stop your operating system's "Do not Disturb" (focus mode/assist) mode,
+close/open programs, etc., whenever a focus
+time period begins or ends.
 
-**Currently, it is not in a usable state yet!**
+For now, **only Outlook 365 calendars are supported**.
 
-TODO create docs for other sections (Installation & Usage, Contributing, Roadmap)
+**Currently, the app is not in a usable state yet!**
 
-Running on macOS:
-- Unpack, then double click the focus-time binary, it will fail, macOS will show a message such as 
-- "“focus-time” cannot be opened because it is from an unidentified developer." or "“focus-time” can’t be opened because Apple cannot check it for malicious software." if you run it from the Terminal
-- On macOS 12, go to System settings -> Security control pane -> General tab.
-- On macOS 13, go to System settings -> Privacy & Security
-- Look for a message such as "focus-time" was blocked from use because it is not from an identified developer
-- CLick the "Allow anyway" button
-- Now run it from the Terminal, there will still be a pop-up, but it has an Open button
-- Another error message might appear that warns you about Python being from an unidentified developer. Go to system settings again and allow it
+## Features
 
-It's probably easier to just have people build the app themselves, and exclude the macOS zip from the release
+- Easy to set up: there is a dedicated configuration command that interactively queries all necessary information
+- Various configuration settings
+- Optionally overwrite _reminder_ (in minutes) of the focus time blocker events (useful if you did not create them
+  yourself, but e.g. used Microsoft Viva Insights)
+- Ability to start (or end) focus times for a configurable duration (the tool creates a blocker event in your calendar
+  when _starting_ an adhoc session, or shortens the ongoing calendar event when _stopping_ an adhoc session)
 
-For future reference:
-https://federicoterzi.com/blog/automatic-code-signing-and-notarization-for-macos-apps-using-github-actions/
+## Installation
+
+### Windows (10 and newer)
+
+- Head over to the [Releases](https://github.com/focus-time/focus-time-app/releases) page and download the latest
+  release for Windows
+- Extract the downloaded zip archive
+- Optional: move the extracted folder to a different location, and add it to `PATH`
+- Open a CMD / PowerShell Window, navigate to the extracted folder, and call `focus-time.exe configure` to set up the
+  Focus time app
+
+### macOS (12 and newer)
+
+- Head over to the [Releases](https://github.com/focus-time/focus-time-app/releases) page and download the latest
+  release for macOS
+- Because I did not sign or notarize the application, you first have to remove the _quarantine flag_, e.g.
+  via `xattr -r -d com.apple.quarantine focus-time-app-macos-vx.y.z.zip`
+- In Finder, double-click the downloaded zip archive to extract the application
+- Optional: move the extracted folder to a different location, and add it to `PATH`
+- Open a Terminal Window, navigate to the extracted folder, and call `./focus-time configure` to set up the Focus time
+  app
+
+## Usage
+
+The **Focus time app** CLI comes with built-in documentation which you can read by
+running `focus-time [command] --help`. Here is a brief overview of the available commands:
+
+- `configure` checks your existing configuration for validity (if there is one), or lets you create a new configuration.
+  All configuration options are interactively prompted. It sets up a regularly-triggered background job that calls
+  the `sync` command once per minute
+    - If you use a _personal_ Outlook 365 account, you can use the client ID `bcc815bb-01d0-4765-ae14-e2bf0ee22445`
+    - If you use an Outlook 365 account _for work_, ask your company's Microsoft AAD admin to create a new _App
+      registration_ on https://portal.azure.com. The _Redirect URL_ must be set to "Public client/native (mobile &
+      desktop)" and point to `https://login.microsoftonline.com/common/oauth2/nativeclient`. Under _API permissions_,
+      add _Microsoft Graph_ permissions for `Calendars.ReadWrite` and `offline_access`. The latter permission avoids
+      that you need to constantly re-authenticate, by providing OIDC refresh tokens that are valid for 90 days
+    - Once the configuration has completed successfully, the path to the configuration file is printed to the console.
+      You can _change_ already-configured options there. On Windows, the file is located
+      at `C:/Users/<your-username>/AppData/Roaming/FocusTimeApp/configuration.yaml`, on macOS you find it
+      at `/Users/<your-username>/Library/Application Support/FocusTimeApp/configuration.yaml`
+- `sync` Synchronizes the Do-Not-Disturb (Focus) state of your operating system with your focus
+  time calendar events. If there is an active focus time calendar event, the Do-Not-Disturb mode (and other start
+  commands you configured) is activated (unless this app already recently activated it). If there is no active
+  calendar event (anymore), Do-Not-Disturb is deactivated again (if this app has set it), and other possibly configured
+  stop commands are called
+- `start <duration in minutes>` creates a new focus time calendar event in your configured calendar that starts _now_
+  and ends in `duration` minutes. It then runs the `sync` command, so that your start command(s) are
+  immediately executed
+- `stop` stops an ongoing focus time calendar event, by shortening it so that it ends right now. Also runs the `sync`
+  command internally, so that your configured stop command(s) are immediately executed.
+- `uninstall` removes the scheduled background job (for the `sync` command) and Do-Not-Disturb helpers, if the operating
+  system supports the removal
+    - Note: on macOS, you have to manually open the _Shortcuts_ app and delete the `focus-time-app` shortcut yourself
+
+## Contributing & troubleshooting
+
+If you encountered a problem or have a suggestion for improving the software, please head over to
+the [Discussions](https://github.com/focus-time/focus-time-app/discussions) page.
+
+Before you ask a _troubleshooting_ question, you may first want to look at the logs stored
+under `C:/Users/<your-username>/AppData/Roaming/FocusTimeApp/` on Windows,
+and under `/Users/<your-username>/Library/Application Support/FocusTimeApp/` on macOS. These logs often indicate what
+is going wrong, so that you can help yourself.
+
+## Roadmap
+
+Features that are missing but will eventually be implemented can be found on
+the [Issues](https://github.com/focus-time/focus-time-app/issues) page.
 
 ## Out of scope
 
-For the time being, the following features are not yet implemented (but PRs or issues are welcome):
+For the time being, the implementation of the following features is **not** planned (but PRs or proposals are welcome):
 
-- Supporting other calendar providers (Google Calendar, CalDAV)
-- Syncing the state to other devices.
-    - macOS/iOS supports this out-of-the-box. For Android devices, we would need to implement our own support, probably
-      via a dedicated Android app, and a command for the desktop client to wake up the device (our app then checks the
-      calendar). Wake up support can also be deferred, and our app could simply check for updated calendar events every
-      X hours.
-- GUI: could implement it as PySide6 GUI with a tray icon
+- Supporting other calendar providers
+- Synchronizing the state to other (mobile) devices
+    - Note: macOS supports the synchronization of the Focus mode to your iPhone, out-of-the-box. For Android
+      devices, there does not seem to be a solution, not even
+      the [Phone Link](https://apps.microsoft.com/store/detail/phone-link/9NMPJ99VJBWV) app supports it. Adding our own
+      support would be a lot of work and require a dedicated Android companion app, and a command for the desktop CLI to
+      wake up the device (the mobile companion app would then check the calendar).
+- GUI: adding a GUI (e.g. using PySide 6) would be a lot of work, but would have the benefit of adressing a much wider
+  audience and faciliate the usage, and have the ability to show a tray icon
 - Linux support
-- Analytics of focus time events
-
-## Coding TODOs
-
-- Test automated releases on both platforms
-- Fix calendar helper for unit tests so that it uses its own credentials --> fixes manual E2E tests on macOS
-- Automated dependency updates with Renovate Bot
-- Version must be added to the code and the CLI's help text
-- Implement other integration tests
-- Once macOS 13 runners can handle AppleScript:
-  - Prepare separate Outlook calendars for each OS, use them
-  - Run CI tests on macOS
-
-## Considerations for system level tests
-
-- Cases:
-  - sync: background job triggers on-off
-    - configuration is run with enabled BG job
-    - create an event 1 minute in the future, lasts 2 minutes
-    - verify that DND is off
-    - wait for 1 minute
-    - verify that DND is on
-    - wait for 2 minutes
-    - verify that DND is off
-  - start: TODO
-  - stop: TODO
-  - uninstall: TODO
+- Offering _signed_ binaries for macOS: we do not have an Apple _developer_ account, nor do we intend to pay extortion
+  money to Apple. Also, implementing automated signing+notarization of the application would be a lot of work
