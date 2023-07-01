@@ -10,8 +10,6 @@ time period begins or ends.
 
 For now, **only Outlook 365 calendars are supported**.
 
-**Currently, the app is not in a usable state yet!**
-
 ## Features
 
 - Easy to set up: there is a dedicated configuration command that interactively queries all necessary information
@@ -37,7 +35,7 @@ For now, **only Outlook 365 calendars are supported**.
 - Head over to the [Releases](https://github.com/focus-time/focus-time-app/releases) page and download the latest
   release for macOS
 - Because I did not sign or notarize the application, you first have to remove the _quarantine flag_, e.g.
-  via `xattr -r -d com.apple.quarantine focus-time-app-macos-vx.y.z.zip`
+  via `sudo xattr -r -d com.apple.quarantine focus-time-app-macos-vx.y.z.zip`
 - In Finder, double-click the downloaded zip archive to extract the application
 - Optional: move the extracted folder to a different location, and add it to `PATH`
 - Open a Terminal Window, navigate to the extracted folder, and call `./focus-time configure` to set up the Focus time
@@ -45,7 +43,7 @@ For now, **only Outlook 365 calendars are supported**.
 
 ## Usage
 
-The **Focus time app** CLI comes with built-in documentation which you can read by
+The **Focus time app** CLI comes with built-in documentation which you can access by
 running `focus-time [command] --help`. Here is a brief overview of the available commands:
 
 - `configure` checks your existing configuration for validity (if there is one), or lets you create a new configuration.
@@ -74,6 +72,7 @@ running `focus-time [command] --help`. Here is a brief overview of the available
 - `uninstall` removes the scheduled background job (for the `sync` command) and Do-Not-Disturb helpers, if the operating
   system supports the removal
     - Note: on macOS, you have to manually open the _Shortcuts_ app and delete the `focus-time-app` shortcut yourself
+- `version` prints the version of the tool
 
 ## Contributing & troubleshooting
 
