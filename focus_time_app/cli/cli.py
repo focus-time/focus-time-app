@@ -3,6 +3,7 @@ from typing import Tuple, Annotated
 
 import typer
 
+from focus_time_app import FOCUS_TIME_APP_VERSION
 from focus_time_app.cli.commands.uninstall_command import UninstallCommand
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.adapter_factory import create_calendar_adapter
@@ -139,3 +140,10 @@ def uninstall():
     Removes scheduled background jobs and Do-Not-Disturb helpers, if the operating system supports the removal.
     """
     UninstallCommand().run()
+
+@app.command()
+def version():
+    """
+    Prints the version of the Focus time app tool.
+    """
+    typer.echo(f"Focus time app v{FOCUS_TIME_APP_VERSION}")
