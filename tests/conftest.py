@@ -177,7 +177,8 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
 
 
 def reset_dnd_and_bg_scheduler():
-    CommandExecutorImpl.set_dnd_active(active=False, dnd_profile_name="unused")
+    if CommandExecutorImpl.is_dnd_helper_installed():
+        CommandExecutorImpl.set_dnd_active(active=False, dnd_profile_name="unused")
     BackgroundSchedulerImpl.uninstall_background_scheduler()
 
 
