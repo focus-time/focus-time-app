@@ -1,7 +1,7 @@
 # focus-time-app
 
 The **Focus time app** is a _CLI_ tool for macOS and Windows that regularly checks your calendar for "focus time"
-blocker events. Whenever such events begin or end, it triggers your desktop OS's Focus Mode feature, or calls binary
+blocker events. Whenever such events begin or end, it triggers your desktop OS's Focus Mode feature, or calls
 shell commands that you can configure.
 
 It saves you from having to _manually_ start or stop your operating system's "Do not Disturb" (focus mode/assist) mode,
@@ -13,9 +13,13 @@ For now, **only Outlook 365 calendars are supported**.
 ## Features
 
 - Easy to set up: there is a dedicated configuration command that interactively queries all necessary information
-- Various configuration settings
-- Optionally overwrite _reminder_ (in minutes) of the focus time blocker events (useful if you did not create them
-  yourself, but e.g. used Microsoft Viva Insights)
+- Various configuration settings, such as:
+    - The title/subject of the focus time blocker events
+    - Optionally overwrite _reminder_ (in minutes) of the focus time blocker events (useful if you did not create them
+      yourself, but e.g. used Microsoft Viva Insights)
+    - List of shell commands to run when a focus time event starts or ends, including the special commands `dnd-start`
+      or `dnd-stop` which control your operating system's Do-Not-Disturb / Focus mode
+    - The Windows _focus assist_ to be used ("Priority only", "Alarms only")
 - Ability to start (or end) focus times for a configurable duration (the tool creates a blocker event in your calendar
   when _starting_ an adhoc session, or shortens the ongoing calendar event when _stopping_ an adhoc session)
 
@@ -34,7 +38,7 @@ For now, **only Outlook 365 calendars are supported**.
 
 - Head over to the [Releases](https://github.com/focus-time/focus-time-app/releases) page and download the latest
   release for macOS
-- Because I did not sign or notarize the application, you first have to remove the _quarantine flag_, e.g.
+- Since the application is not signed or notarized, you first have to remove the _quarantine flag_, e.g.
   via `sudo xattr -r -d com.apple.quarantine focus-time-app-macos-vx.y.z.zip`
 - In Finder, double-click the downloaded zip archive to extract the application
 - Optional: move the extracted folder to a different location, and add it to `PATH`
@@ -82,26 +86,26 @@ the [Discussions](https://github.com/focus-time/focus-time-app/discussions) page
 Before you ask a _troubleshooting_ question, you may first want to look at the logs stored
 under `C:/Users/<your-username>/AppData/Roaming/FocusTimeApp/` on Windows,
 and under `/Users/<your-username>/Library/Application Support/FocusTimeApp/` on macOS. These logs often indicate what
-is going wrong, so that you can help yourself.
+is going wrong, providing guidance for how to fix the problem.
 
 ## Roadmap
 
 Features that are missing but will eventually be implemented can be found on
-the [Issues](https://github.com/focus-time/focus-time-app/issues) page.
+the [Roadmap](https://github.com/orgs/focus-time/projects/1) page.
 
 ## Out of scope
 
 For the time being, the implementation of the following features is **not** planned (but PRs or proposals are welcome):
 
-- Supporting other calendar providers
+- Supporting other calendar providers (except for those listed on the _Issues_ page)
 - Synchronizing the state to other (mobile) devices
     - Note: macOS supports the synchronization of the Focus mode to your iPhone, out-of-the-box. For Android
       devices, there does not seem to be a solution, not even
       the [Phone Link](https://apps.microsoft.com/store/detail/phone-link/9NMPJ99VJBWV) app supports it. Adding our own
-      support would be a lot of work and require a dedicated Android companion app, and a command for the desktop CLI to
-      wake up the device (the mobile companion app would then check the calendar).
+      support would be a lot of work and require a dedicated Android companion app, and a way for the desktop CLI to
+      wake up the device
 - GUI: adding a GUI (e.g. using PySide 6) would be a lot of work, but would have the benefit of adressing a much wider
-  audience and faciliate the usage, and have the ability to show a tray icon
+  audience and facilitate the usage, and have the ability to show a tray icon
 - Linux support
 - Offering _signed_ binaries for macOS: we do not have an Apple _developer_ account, nor do we intend to pay extortion
-  money to Apple. Also, implementing automated signing+notarization of the application would be a lot of work
+  money to Apple. Also, implementing automated signing+notarization of the application is not trivial
