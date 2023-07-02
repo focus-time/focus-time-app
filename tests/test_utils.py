@@ -1,3 +1,5 @@
+import string
+import random
 import sys
 from pathlib import Path
 
@@ -5,6 +7,11 @@ from focus_time_app.configuration.configuration import ConfigurationV1
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.adapter_factory import create_calendar_adapter
 from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop
+
+
+def get_random_event_name_postfix() -> str:
+    source = string.ascii_letters + string.digits
+    return ''.join((random.choice(source) for i in range(8)))
 
 
 def get_frozen_binary_path() -> str:
