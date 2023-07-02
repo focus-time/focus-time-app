@@ -116,7 +116,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
 
     Persistence.get_config_file_path().unlink(missing_ok=True)
 
-    cli_with_args = [get_frozen_binary_path(), "configure"]
+    cli_with_args = [get_frozen_binary_path(), "configure", "--skip-install-dnd-helper"]
     if skip_background_scheduler_setup:
         cli_with_args.append("--skip-background-scheduler-setup")
     config_process = subprocess.Popen(cli_with_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,

@@ -18,10 +18,11 @@ from focus_time_app.utils import is_production_environment
 
 class ConfigurationCommand:
     def __init__(self, configuration: Optional[ConfigurationV1], calendar_adapter: Optional[AbstractCalendarAdapter],
-                 skip_background_scheduler_setup: bool):
+                 skip_background_scheduler_setup: bool, skip_install_dnd_helper: bool):
         self._configuration = configuration
         self._calendar_adapter = calendar_adapter
         self._skip_background_scheduler_setup = skip_background_scheduler_setup
+        self._skip_install_dnd_helper = skip_install_dnd_helper
 
     def run(self):
         if self._configuration and self._calendar_adapter:
@@ -72,7 +73,8 @@ class ConfigurationCommand:
 
         self._configure_event_reminders(configuration)
 
-        CommandExecutorImpl.install_dnd_helpers()
+        if not self._skip_install_dnd_helper:
+            CommandExecutorImpl.install_dnd_helpers()
 
         self._configure_dnd_profile_name(configuration)
 
