@@ -162,6 +162,9 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
     elif sys.platform == "darwin":
         out = config_process.stdout.readline()  # tells user how to change the focus name in the 'Shortcuts' app
 
+    out = config_process.stdout.readline()  # asks whether to make the binary generally available (e.g. on PATH)
+    write_line_to_stream(config_process.stdin, "N")
+
     stdout, stderr = config_process.communicate()
     assert config_process.returncode == 0, f"configure command exited with non-zero command. " \
                                            f"Stdout output:\n{stdout}\n" \

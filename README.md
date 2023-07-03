@@ -10,6 +10,7 @@ time period begins or ends.
 
 For now, **only Outlook 365 calendars are supported**.
 
+
 ## Features
 
 - Easy to set up: there is a dedicated configuration command that interactively queries all necessary information
@@ -30,7 +31,7 @@ For now, **only Outlook 365 calendars are supported**.
 - Head over to the [Releases](https://github.com/focus-time/focus-time-app/releases) page and download the latest
   release for Windows
 - Extract the downloaded zip archive
-- Optional: move the extracted folder to a different location, and add it to `PATH`
+- Optional: move the extracted folder to a different location
 - Open a CMD / PowerShell Window, navigate to the extracted folder, and call `focus-time.exe configure` to set up the
   Focus time app
 
@@ -41,7 +42,7 @@ For now, **only Outlook 365 calendars are supported**.
 - Since the application is not signed or notarized, you first have to remove the _quarantine flag_, e.g.
   via `sudo xattr -r -d com.apple.quarantine focus-time-app-macos-vx.y.z.zip`
 - In Finder, double-click the downloaded zip archive to extract the application
-- Optional: move the extracted folder to a different location, and add it to `PATH`
+- Optional: move the extracted folder to a different location
 - Open a Terminal Window, navigate to the extracted folder, and call `./focus-time configure` to set up the Focus time
   app
 

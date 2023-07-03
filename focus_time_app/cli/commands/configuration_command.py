@@ -5,6 +5,7 @@ import typer
 from click import Choice
 
 from focus_time_app.cli.background_scheduler import BackgroundSchedulerImpl
+from focus_time_app.cli.shell_availability import ShellAvailabilityImpl
 from focus_time_app.cli.utils import IntEnumChoice
 from focus_time_app.command_execution import CommandExecutorImpl
 from focus_time_app.command_execution.abstract_command_executor import CommandExecutorConstants
@@ -80,6 +81,15 @@ class ConfigurationCommand:
 
         if is_production_environment() and not self._skip_background_scheduler_setup:
             BackgroundSchedulerImpl.install_or_repair_background_scheduler()
+
+        if is_production_environment() and not ShellAvailabilityImpl.is_available():
+            if typer.confirm("Do you want to make the focus-time binary generally available on your shell?",
+                             default=False, prompt_suffix='\n'):
+                ShellAvailabilityImpl.make_available()
+                typer.echo("The focus-time binary has been successfully made generally available.")
+                if ShellAvailabilityImpl.requires_shell_restart():
+                    typer.echo("Note that for the change to take effect, you first need to close the current shell "
+                               "window and open a new one!")
 
         Persistence.store_configuration(configuration)
 
