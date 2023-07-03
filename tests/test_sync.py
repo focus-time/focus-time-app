@@ -76,7 +76,12 @@ class TestCLISyncCommand:
 
     @staticmethod
     def _run_sync_command() -> str:
-        # TODO get better output, the stringification of CalledProcessError does not include stdout or stderr, but it
-        #  would be useful to have it
-        finished_process = subprocess.run([get_frozen_binary_path(), "sync"], check=True, capture_output=True)
+        try:
+            finished_process = subprocess.run([get_frozen_binary_path(), "sync"], check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            # Handle the error explicitly, because the stringification of CalledProcessError does not include stdout
+            # or stderr, which is very useful for diagnosing errors
+            raise RuntimeError(
+                f"Encountered CalledProcessError: {e}.\nStdout:\n{e.stdout.decode('utf-8')}"
+                f"\n\nStderr:\n{e.stderr.decode('utf-8')}") from None
         return finished_process.stdout.decode("utf-8")
