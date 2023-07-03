@@ -12,6 +12,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  event_file: # Recommended by https://github.com/marketplace/actions/publish-test-results
+    name: "Event File"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: Event File
+          path: ${{ github.event_path }}
   ci:
     strategy:
       matrix:
@@ -28,13 +37,21 @@ jobs:
           os: ${{ matrix.os }}
 
       - name: Run integration tests
-        if: !startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') == false
         run: |
-          pytest tests
+          pytest tests --junitxml=junit/test-results.xml
         env:
           CI: "1"
           OUTLOOK365_EMAIL: ${{ secrets.OUTLOOK365_EMAIL }}
           OUTLOOK365_PASSWORD: ${{ secrets.OUTLOOK365_PASSWORD }}
+
+      - name: Upload Test Results
+        if: always() && startsWith(github.ref, 'refs/tags/') == false
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results (${{ matrix.os }})
+          path: |
+            junit/*.xml
 
   cd:
     if: startsWith(github.ref, 'refs/tags/')
