@@ -116,10 +116,12 @@ def stop():
 
 
 @app.command()
-def configure(skip_background_scheduler_setup: Annotated[
-    bool, typer.Option(help="Whether to skip the set up of operating-system-specific background "
-                            "scheduler that regularly calls the 'sync' command")
-] = False):
+def configure(skip_background_scheduler_setup: Annotated[bool, typer.Option(
+    help="Whether to skip the set up of operating-system-specific background "
+         "scheduler that regularly calls the 'sync' command")] = False,
+              skip_install_dnd_helper: Annotated[bool, typer.Option(
+                  help="Whether to skip the set up of the do-not-disturb mechanism")] = False
+              ):
     """
     Checks the existing configuration for validity and lets you create a new configuration. All configuration options
     are interactively prompted.
@@ -131,7 +133,8 @@ def configure(skip_background_scheduler_setup: Annotated[
     except Exception as e:
         raise _handle_unexpected_configuration_loading_error("cli.configure", e)
 
-    ConfigurationCommand(config, calendar_adapter, skip_background_scheduler_setup).run()
+    ConfigurationCommand(config, calendar_adapter, skip_background_scheduler_setup=skip_background_scheduler_setup,
+                         skip_install_dnd_helper=skip_install_dnd_helper).run()
 
 
 @app.command()
@@ -140,6 +143,7 @@ def uninstall():
     Removes scheduled background jobs and Do-Not-Disturb helpers, if the operating system supports the removal.
     """
     UninstallCommand().run()
+
 
 @app.command()
 def version():

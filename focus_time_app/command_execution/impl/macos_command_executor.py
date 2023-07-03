@@ -23,9 +23,9 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
                 subprocess.check_call(command, shell=True)
 
     def install_dnd_helpers(self):
-        while not self._is_shortcut_installed():
+        while not self.is_dnd_helper_installed():
             self._install_shortcut()
-            if self._is_shortcut_installed():
+            if self.is_dnd_helper_installed():
                 typer.echo("Shortcut was successfully installed")
             else:
                 typer.prompt("Could not detect that the shortcut has been installed. Press Enter to try again.",
@@ -36,8 +36,7 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
         subprocess.check_call(f"shortcuts run '{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}' <<< {arg}",
                               shell=True)
 
-    @staticmethod
-    def _is_shortcut_installed() -> bool:
+    def is_dnd_helper_installed(self) -> bool:
         output_bytes = subprocess.check_output(["/usr/bin/shortcuts", "list"])
         output_lines = output_bytes.decode("utf-8").splitlines()
         return CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME in output_lines

@@ -12,14 +12,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  event_file: # Recommended by https://github.com/marketplace/actions/publish-test-results
+    name: "Event File"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: Event File
+          path: ${{ github.event_path }}
   ci:
     strategy:
       matrix:
         os: [ macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
-    # only run one job per OS at a time, because there could be several pipelines running concurrently, and without
-    # the "concurrency" trick, the integration-tests would interfere with each other
-    concurrency: integration-test-${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
 
@@ -31,18 +37,21 @@ jobs:
           os: ${{ matrix.os }}
 
       - name: Run integration tests
-        # For now, we only run tests on Windows, because currently, on macOS, we cannot get the unattended installation
-        # of the DND helper to work:
-        # - On the stable macOS 12 runner OS, the Shortcuts app cannot be controlled using AppleScript, for unknown reasons
-        # - On the still-in-beta macOS 13 runner OS, the Shortcut app can be controlled, but the  macOS 13 does not
-        #   support AppleScript yet, see https://github.com/actions/runner-images/issues/7531
-        if: matrix.os == 'windows-latest'
+        if: startsWith(github.ref, 'refs/tags/') == false
         run: |
-          pytest tests
+          pytest tests --junitxml=junit/test-results.xml
         env:
           CI: "1"
           OUTLOOK365_EMAIL: ${{ secrets.OUTLOOK365_EMAIL }}
           OUTLOOK365_PASSWORD: ${{ secrets.OUTLOOK365_PASSWORD }}
+
+      - name: Upload Test Results
+        if: always() && startsWith(github.ref, 'refs/tags/') == false
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results (${{ matrix.os }})
+          path: |
+            junit/*.xml
 
   cd:
     if: startsWith(github.ref, 'refs/tags/')

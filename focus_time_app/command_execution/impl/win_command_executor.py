@@ -25,6 +25,9 @@ class WindowsCommandExecutor(AbstractCommandExecutor):
     def install_dnd_helpers(self):
         pass  # Nothing to do
 
+    def is_dnd_helper_installed(self) -> bool:
+        return True
+
     def uninstall_dnd_helpers(self):
         pass  # Nothing to do
 

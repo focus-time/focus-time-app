@@ -29,6 +29,13 @@ class AbstractCommandExecutor(ABC):
         :return:
         """
 
+    @abstractmethod
+    def is_dnd_helper_installed(self) -> bool:
+        """
+
+        :return:
+        """
+
     def uninstall_dnd_helpers(self):
         """
 

@@ -2,8 +2,9 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from os import getenv
+from pathlib import Path
 from subprocess import Popen
-from typing import IO, Any
+from typing import IO, Any, List
 
 import marshmallow_dataclass
 import pytest
@@ -21,9 +22,55 @@ from focus_time_app.focus_time_calendar.abstract_calendar_adapter import Abstrac
 from focus_time_app.focus_time_calendar.event import CalendarType
 from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import Outlook365CalendarAdapter, \
     Outlook365TestingOverrides
-from tests.test_utils import get_frozen_binary_path, get_configured_calendar_adapter, clean_calendar
+from tests.test_utils import get_frozen_binary_path, clean_calendar, get_random_event_name_postfix
 
 OUTLOOK365_TEST_CLIENT_ID = "bcc815bb-01d0-4765-ae14-e2bf0ee22445"
+
+
+@dataclass
+class ConfiguredCommands:
+    commands: List[str]
+    verification_file_path: Path
+
+
+@pytest.fixture
+def start_commands(tmp_path: Path) -> ConfiguredCommands:
+    """
+    Returns the start command(s) that should be run by the Focus time app. The commands depend on the operating system.
+
+    On macOS, we cannot use the "dnd-start" command yet, because we are unable to achieve an UNATTENDED installation
+    of the Shortcuts DND helper:
+     - On the stable macOS 12 runner OS, the Shortcuts app cannot be controlled using AppleScript, for unknown reasons
+     - On the still-in-beta macOS 13 runner OS, the Shortcut app can be controlled, but the  macOS 13 does not
+       support AppleScript yet, see https://github.com/actions/runner-images/issues/7531
+    """
+    verification_file_path = tmp_path / "verification.txt"
+    if sys.platform == "win32":
+        # Note: you need to omit the <space> between "start" and ">>" as otherwise the space would become part of the
+        # file
+        return ConfiguredCommands(commands=["dnd-start", f"echo start>> {verification_file_path}"],
+                                  verification_file_path=verification_file_path)
+    elif sys.platform == "darwin":
+        return ConfiguredCommands(commands=[f"echo start >> {verification_file_path}"],
+                                  verification_file_path=verification_file_path)
+    raise NotImplementedError
+
+
+@pytest.fixture
+def stop_commands(tmp_path: Path) -> ConfiguredCommands:
+    """
+    Returns the stop command(s) that should be run by the Focus time app. The commands depend on the operating system.
+    """
+    verification_file_path = str(tmp_path / "verification.txt")
+    if sys.platform == "win32":
+        # Note: you need to omit the <space> between "stop" and ">>" as otherwise the space would become part of the
+        # file
+        return ConfiguredCommands(commands=["dnd-stop", f"echo stop>> {verification_file_path}"],
+                                  verification_file_path=verification_file_path)
+    elif sys.platform == "darwin":
+        return ConfiguredCommands(commands=[f"echo stop >> {verification_file_path}"],
+                                  verification_file_path=verification_file_path)
+    raise NotImplementedError
 
 
 def write_line_to_stream(stream: IO, input: Any):
@@ -35,34 +82,41 @@ def write_line_to_stream(stream: IO, input: Any):
 class ConfiguredCLI:
     configuration: ConfigurationV1
     calendar_adapter: AbstractCalendarAdapter
+    verification_file_path: Path
 
 
 @pytest.fixture(params=[CalendarType.Outlook365])
-def configured_cli_no_bg_jobs(request) -> ConfiguredCLI:
-    yield from configured_cli(request.param, skip_background_scheduler_setup=True)
+def configured_cli_no_bg_jobs(request, start_commands, stop_commands) -> ConfiguredCLI:
+    yield from configured_cli(request.param, skip_background_scheduler_setup=True, start_commands=start_commands,
+                              stop_commands=stop_commands)
 
 
 @pytest.fixture(params=[CalendarType.Outlook365])
-def configured_cli_with_bg_jobs(request) -> ConfiguredCLI:
-    yield from configured_cli(request.param, skip_background_scheduler_setup=False)
+def configured_cli_with_bg_jobs(request, start_commands, stop_commands) -> ConfiguredCLI:
+    yield from configured_cli(request.param, skip_background_scheduler_setup=False, start_commands=start_commands,
+                              stop_commands=stop_commands)
 
 
-def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup: bool) -> ConfigurationV1:
-    # TODO add logging wherever it is useful
+def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup: bool,
+                   start_commands: ConfiguredCommands, stop_commands: ConfiguredCommands) -> ConfiguredCLI:
     reset_dnd_and_bg_scheduler()
     if Persistence.ongoing_focustime_markerfile_exists():
         Persistence.set_ongoing_focustime(ongoing=False)
 
     dnd_profile_name = CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE if sys.platform == "win32" \
         else "unused"
+    # We use a different Focustime event blocker name for every test, to allow multiple tests to run in parallel,
+    # without interfering with each other
+    focustime_event_name = "Focustime-" + get_random_event_name_postfix()
     config = ConfigurationV1(calendar_type=calendar_type, calendar_look_ahead_hours=3, calendar_look_back_hours=5,
-                             focustime_event_name="Focustime", start_commands=["dnd-start"], stop_commands=["dnd-stop"],
+                             focustime_event_name=focustime_event_name,
+                             start_commands=start_commands.commands, stop_commands=stop_commands.commands,
                              dnd_profile_name=dnd_profile_name, adjust_event_reminder_time=True,
                              event_reminder_time_minutes=15)
 
     Persistence.get_config_file_path().unlink(missing_ok=True)
 
-    cli_with_args = [get_frozen_binary_path(), "configure"]
+    cli_with_args = [get_frozen_binary_path(), "configure", "--skip-install-dnd-helper"]
     if skip_background_scheduler_setup:
         cli_with_args.append("--skip-background-scheduler-setup")
     config_process = subprocess.Popen(cli_with_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -114,16 +168,17 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
                                            f"Stderr output:\n{stderr}"
 
     calendar_adapter = get_configured_calendar_adapter_for_testing(config)
-    clean_calendar(configuration=config, calendar_adapter=calendar_adapter)
 
-    yield ConfiguredCLI(configuration=config, calendar_adapter=calendar_adapter)
+    yield ConfiguredCLI(configuration=config, calendar_adapter=calendar_adapter,
+                        verification_file_path=start_commands.verification_file_path)
 
     clean_calendar(configuration=config, calendar_adapter=calendar_adapter)
     reset_dnd_and_bg_scheduler()
 
 
 def reset_dnd_and_bg_scheduler():
-    CommandExecutorImpl.set_dnd_active(active=False, dnd_profile_name="unused")
+    if CommandExecutorImpl.is_dnd_helper_installed():
+        CommandExecutorImpl.set_dnd_active(active=False, dnd_profile_name="unused")
     BackgroundSchedulerImpl.uninstall_background_scheduler()
 
 
@@ -194,6 +249,7 @@ def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) 
     frozen focus-time app that being tested: in general, the credentials created in a keychain by app #A (e.g. the
     frozen focus-time binary) cannot be read by any other apps #B (e.g. Python running pytest).
     """
+
     def _get_authorization_code(consent_url: str) -> str:
         return get_outlook365_authorization_code_url(consent_url)
 

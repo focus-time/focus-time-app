@@ -100,6 +100,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         schedule, calendar = self._get_schedule_and_calendar()
         q = calendar.new_query("start").greater_equal(from_date).order_by("start", ascending=True)
         q.chain("and").on_attribute("end").less_equal(to_date)
+        q.chain("and").on_attribute("subject").equals(self._configuration.focustime_event_name)
 
         events: List[FocusTimeEvent] = []
         o365_events = schedule.get_events(query=q)
@@ -154,6 +155,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         q = calendar.new_query("start").greater_equal(event.start)
         q.chain("and").on_attribute("end").less_equal(event.end)
         q.chain("and").on_attribute("iCalUId").equals(event.id)
+        q.chain("and").on_attribute("subject").equals(self._configuration.focustime_event_name)
 
         o365_events = list(schedule.get_events(query=q))
         if len(o365_events) != 1:
