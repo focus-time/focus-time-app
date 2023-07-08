@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  // Fix default branch rebasing - always rebase still-open temporary branches, whenever its source branch has changed
+  "rebaseWhen": "behind-base-branch",
+  "rollbackPrs": true,
+  "packageRules": [
+    {
+      "description": "Automatically merge minor and patch-level updates, if tests were successful",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true,
+    }
+  ]
+}
