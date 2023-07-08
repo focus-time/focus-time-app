@@ -58,5 +58,7 @@ class MacOsShellAvailability(AbstractShellAvailability):
         profile_content = profile_file.read_text()
         if profile_content:
             profile_content += "\n\n"
-        profile_content += self.PROFILE_MARKER_COMMENT + '\n' + f'export PATH="$PATH:{sys.executable}"'
+
+        dir_path = Path(sys.executable).parent
+        profile_content += self.PROFILE_MARKER_COMMENT + '\n' + f'export PATH="$PATH:{dir_path}"'
         profile_file.write_text(profile_content)
