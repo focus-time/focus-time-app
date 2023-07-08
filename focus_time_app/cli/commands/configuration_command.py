@@ -83,13 +83,17 @@ class ConfigurationCommand:
             BackgroundSchedulerImpl.install_or_repair_background_scheduler()
 
         if is_production_environment() and not ShellAvailabilityImpl.is_available():
-            if typer.confirm("Do you want to make the focus-time binary generally available on your shell?",
+            if typer.confirm("Do you want to make the focus-time binary generally available on your shell (via the "
+                             "PATH environment variable)?",
                              default=False, prompt_suffix='\n'):
-                ShellAvailabilityImpl.make_available()
-                typer.echo("The focus-time binary has been successfully made generally available.")
-                if ShellAvailabilityImpl.requires_shell_restart():
-                    typer.echo("Note that for the change to take effect, you first need to close the current shell "
-                               "window and open a new one!")
+                try:
+                    ShellAvailabilityImpl.make_available()
+                    typer.echo("The focus-time binary has been successfully made generally available.")
+                    if ShellAvailabilityImpl.requires_shell_restart():
+                        typer.echo("Note that for the change to take effect, you first need to close the current shell "
+                                   "window and open a new one!")
+                except Exception as e:
+                    typer.echo(f"An error occurred while trying to make the focus-time binary generally available: {e}")
 
         Persistence.store_configuration(configuration)
 
