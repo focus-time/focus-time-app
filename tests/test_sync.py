@@ -1,6 +1,5 @@
 import logging
 import subprocess
-import sys
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -94,13 +93,10 @@ class TestCLISyncCommand:
             assert not CommandExecutorImpl.is_dnd_active()
         assert not configured_cli_with_bg_jobs.verification_file_path.exists()
 
+        # Note: the GitHub CI/CD runners are slow to run the jobs - waiting for EXACTLY 60 minutes was too little,
+        # the background job was still in a running state
         logger.info("Sleeping for one minute and 10 seconds")
         time.sleep(70)
-
-        # TODO Remove
-        if sys.platform == "win32":
-            output = subprocess.check_output(["schtasks"], shell=True).decode("utf-8")
-            logger.info(output)
 
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert CommandExecutorImpl.is_dnd_active()
