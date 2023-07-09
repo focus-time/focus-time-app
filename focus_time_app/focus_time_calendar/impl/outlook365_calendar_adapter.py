@@ -14,6 +14,7 @@ from focus_time_app.configuration.configuration import ConfigurationV1, Outlook3
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 from focus_time_app.focus_time_calendar.impl.outlook365_keyring_backend import Outlook365KeyringBackend
+from focus_time_app.utils import CI_ENV_VAR_NAME
 
 
 @dataclass
@@ -27,7 +28,7 @@ class Outlook365TestingOverrides:
 def consent_input_token(consent_url: str):
     typer.echo("Visit the following url to grant the Focus Time app access to your personal Outlook 365 calendars:")
     typer.echo(consent_url)
-    if os.getenv("CI", None) is None:
+    if os.getenv(CI_ENV_VAR_NAME, None) is None:
         typer.launch(consent_url)
     typer.echo("After you logged into your Microsoft account and granted consent, your browser should have redirected "
                "you to an empty (white) web page")

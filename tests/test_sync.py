@@ -15,7 +15,7 @@ class TestCLISyncCommand:
     """
     Tests the "sync" CLI command.
 
-    Note: you should set the environment variable "CI" to any value when running pytest.
+    Note: you should set the environment variable defined in CI_ENV_VAR_NAME to any value when running pytest.
     """
 
     def test_manual_on_off_sync(self, configured_cli_no_bg_jobs: ConfiguredCLI):
