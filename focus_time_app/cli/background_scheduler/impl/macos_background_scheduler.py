@@ -15,11 +15,11 @@ class MacOsBackgroundScheduler(AbstractBackgroundScheduler):
     """
 
     LAUNCHD_AGENT_DICT = {
-        "Label": "FocusTimeApp",
+        "Label": f"com.focustime{get_environment_suffix()}",
         "KeepAlive": True,
         "ThrottleInterval": 60  # seconds
     }
-    LAUNCHD_AGENT_FILE = Path.home() / "Library" / "LaunchAgents" / f"focus-time-app{get_environment_suffix()}.plist"
+    LAUNCHD_AGENT_FILE = Path.home() / "Library" / "LaunchAgents" / f"com.focustime{get_environment_suffix()}.plist"
 
     def install_or_repair_background_scheduler(self):
         self.uninstall_background_scheduler()
@@ -29,7 +29,7 @@ class MacOsBackgroundScheduler(AbstractBackgroundScheduler):
         if is_production_environment():
             plist_dict["ProgramArguments"] = [sys.executable, "sync"]
             if os.getenv(CI_ENV_VAR_NAME, None) is not None:
-                plist_dict["Environment"] = {CI_ENV_VAR_NAME: "1"}
+                plist_dict["EnvironmentVariables"] = {CI_ENV_VAR_NAME: "1"}
         else:
             plist_dict["ProgramArguments"] = [sys.executable, "focus_time_app/main.py", "sync"]
             plist_dict["WorkingDirectory"] = str(Path(__file__).parent.parent.parent.parent.parent)
