@@ -74,6 +74,40 @@ class TestCLISyncCommand:
         assert configured_cli_no_bg_jobs.verification_file_path.read_text() == "start\nstop\n"
         logger.info("Successfully verified that DND is still deactivated")
 
+    def test_automated_on_off_sync(self, configured_cli_with_bg_jobs: ConfiguredCLI):
+        """
+        Like test_manual_on_off_sync, but the "sync" command is not called manually. Instead, the background scheduler
+        is expected to make the sync call internally.
+        """
+        calendar_adapter = configured_cli_with_bg_jobs.calendar_adapter
+        configured_cli_with_bg_jobs.verification_file_path.unlink(missing_ok=True)
+
+        # Create the blocker event that starts now and is 2 minutes long
+        from_date = datetime.now(ZoneInfo('UTC'))
+        to_date = from_date + timedelta(minutes=2)
+        calendar_adapter.create_event(from_date, to_date)
+        logger.info("Created focus time event")
+
+        # DND should be turned off
+        if CommandExecutorImpl.is_dnd_helper_installed():
+            assert not CommandExecutorImpl.is_dnd_active()
+        assert not configured_cli_with_bg_jobs.verification_file_path.exists()
+
+        logger.info("Sleeping for one minute")
+        time.sleep(60)
+
+        if CommandExecutorImpl.is_dnd_helper_installed():
+            assert CommandExecutorImpl.is_dnd_active()
+        assert configured_cli_with_bg_jobs.verification_file_path.read_text() == "start\n"
+        logger.info("Successfully verified that DND has been activated, now sleeping for 2 minutes")
+
+        time.sleep(120)
+
+        if CommandExecutorImpl.is_dnd_helper_installed():
+            assert not CommandExecutorImpl.is_dnd_active()
+        assert configured_cli_with_bg_jobs.verification_file_path.read_text() == "start\nstop\n"
+        logger.info("Successfully verified that DND has been deactivated")
+
     @staticmethod
     def _run_sync_command() -> str:
         try:
