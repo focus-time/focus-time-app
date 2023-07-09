@@ -57,6 +57,14 @@ class Outlook365KeyringBackend(BaseTokenBackend):
 
         password_string = json.dumps(self.token)
 
+        try:
+            # Avoid problems in rare cases where save_token() would not override ALL slots, and load_token() would
+            # not detect it (via JSONDecodeError), causing errors such as
+            # "CompactToken parsing failed with error code: 80049217"
+            self.delete_token()
+        except:
+            pass
+
         pw_length_limit = Outlook365KeyringBackend.PASSWORD_LENGTH_LIMITATION[sys.platform]
         if pw_length_limit:
             offset = 0
