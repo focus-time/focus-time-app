@@ -23,7 +23,7 @@ runs:
       shell: ${{ inputs.os == 'windows-latest' && 'powershell' || 'bash' }}
     - name: Compute Filename
       id: release_filename
-      uses: actions/github-script@v4
+      uses: actions/github-script@v6
       with:
         script: |
           const os = '${{ inputs.os }}';
