@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import sys
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -82,6 +83,11 @@ class TestCLISyncCommand:
         calendar_adapter = configured_cli_with_bg_jobs.calendar_adapter
         configured_cli_with_bg_jobs.verification_file_path.unlink(missing_ok=True)
 
+        # TODO Remove
+        if sys.platform == "win32":
+            output = subprocess.check_output(["schtasks"], shell=True).decode("utf-8")
+            logger.info(output)
+
         # Create the blocker event that starts now and is 2 minutes long
         from_date = datetime.now(ZoneInfo('UTC'))
         to_date = from_date + timedelta(minutes=2)
@@ -95,6 +101,11 @@ class TestCLISyncCommand:
 
         logger.info("Sleeping for one minute")
         time.sleep(60)
+
+        # TODO Remove
+        if sys.platform == "win32":
+            output = subprocess.check_output(["schtasks"], shell=True).decode("utf-8")
+            logger.info(output)
 
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert CommandExecutorImpl.is_dnd_active()
