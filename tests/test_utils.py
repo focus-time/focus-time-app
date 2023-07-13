@@ -1,7 +1,9 @@
 import string
 import random
+import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 from focus_time_app.configuration.configuration import ConfigurationV1
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
@@ -31,3 +33,18 @@ def clean_calendar(configuration: ConfigurationV1, calendar_adapter: AbstractCal
     events = calendar_adapter.get_events(from_date, to_date)
     for event in events:
         calendar_adapter.remove_event(event)
+
+
+def run_cli_command_handle_output_error(cli_command: str, additional_args: Optional[list[str]] = None):
+    try:
+        command_and_args = [get_frozen_binary_path(), cli_command]
+        if additional_args:
+            command_and_args.extend(additional_args)
+        finished_process = subprocess.run(command_and_args, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        # Handle the error explicitly, because the stringification of CalledProcessError does not include stdout
+        # or stderr, which is very useful for diagnosing errors
+        raise RuntimeError(
+            f"Encountered CalledProcessError: {e}.\nStdout:\n{e.stdout.decode('utf-8')}"
+            f"\n\nStderr:\n{e.stderr.decode('utf-8')}") from None
+    return finished_process.stdout.decode("utf-8")

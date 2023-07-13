@@ -1,12 +1,11 @@
 import logging
-import subprocess
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from focus_time_app.command_execution import CommandExecutorImpl
 from tests.conftest import ConfiguredCLI
-from tests.test_utils import get_frozen_binary_path
+from tests.test_utils import run_cli_command_handle_output_error
 
 logger = logging.getLogger("TestCLISyncCommand")
 
@@ -36,7 +35,7 @@ class TestCLISyncCommand:
         logger.info("Created focus time event")
 
         # run sync, nothing should change. DND should be turned off
-        assert self._run_sync_command().startswith("No focus time is active. Exiting ...")
+        assert run_cli_command_handle_output_error("sync").startswith("No focus time is active. Exiting ...")
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert not CommandExecutorImpl.is_dnd_active()
         assert not configured_cli_no_bg_jobs.verification_file_path.exists()
@@ -45,14 +44,15 @@ class TestCLISyncCommand:
         time.sleep(60)
 
         # run sync, should enable DND
-        assert self._run_sync_command().startswith("Found a new focus time, calling start command(s) ...")
+        assert run_cli_command_handle_output_error("sync").startswith(
+            "Found a new focus time, calling start command(s) ...")
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert CommandExecutorImpl.is_dnd_active()
         assert configured_cli_no_bg_jobs.verification_file_path.read_text() == "start\n"
         logger.info("Successfully verified that DND has been activated")
 
         # run sync again immediately, nothing should change (DND should still be on)
-        assert self._run_sync_command().startswith("Focus time is already active. Exiting ...")
+        assert run_cli_command_handle_output_error("sync").startswith("Focus time is already active. Exiting ...")
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert CommandExecutorImpl.is_dnd_active()
         assert configured_cli_no_bg_jobs.verification_file_path.read_text() == "start\n"
@@ -61,14 +61,15 @@ class TestCLISyncCommand:
         time.sleep(120)
 
         # run sync again, DND should be turned off
-        assert self._run_sync_command().startswith("No focus time is active, calling stop command(s) ...")
+        assert run_cli_command_handle_output_error("sync").startswith(
+            "No focus time is active, calling stop command(s) ...")
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert not CommandExecutorImpl.is_dnd_active()
         assert configured_cli_no_bg_jobs.verification_file_path.read_text() == "start\nstop\n"
         logger.info("Successfully verified that DND has been deactivated")
 
         # run sync again immediately, nothing should change
-        assert self._run_sync_command().startswith("No focus time is active. Exiting ...")
+        assert run_cli_command_handle_output_error("sync").startswith("No focus time is active. Exiting ...")
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert not CommandExecutorImpl.is_dnd_active()
         assert configured_cli_no_bg_jobs.verification_file_path.read_text() == "start\nstop\n"
@@ -138,21 +139,10 @@ class TestCLISyncCommand:
         assert events[0].reminder_in_minutes == new_event_reminder_time_minutes
 
         # The sync call should set the event reminder time
-        assert self._run_sync_command().startswith("Found a new focus time, calling start command(s) ...")
+        assert run_cli_command_handle_output_error("sync").startswith(
+            "Found a new focus time, calling start command(s) ...")
 
         events = configured_cli_no_bg_jobs.calendar_adapter.get_events(from_date=now - timedelta(minutes=1),
                                                                        to_date=now + timedelta(minutes=2))
         assert len(events) == 1
         assert events[0].reminder_in_minutes == configured_cli_no_bg_jobs.configuration.event_reminder_time_minutes
-
-    @staticmethod
-    def _run_sync_command() -> str:
-        try:
-            finished_process = subprocess.run([get_frozen_binary_path(), "sync"], check=True, capture_output=True)
-        except subprocess.CalledProcessError as e:
-            # Handle the error explicitly, because the stringification of CalledProcessError does not include stdout
-            # or stderr, which is very useful for diagnosing errors
-            raise RuntimeError(
-                f"Encountered CalledProcessError: {e}.\nStdout:\n{e.stdout.decode('utf-8')}"
-                f"\n\nStderr:\n{e.stderr.decode('utf-8')}") from None
-        return finished_process.stdout.decode("utf-8")
