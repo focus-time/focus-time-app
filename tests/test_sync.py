@@ -110,6 +110,41 @@ class TestCLISyncCommand:
         assert configured_cli_with_bg_jobs.verification_file_path.read_text() == "start\nstop\n"
         logger.info("Successfully verified that DND has been deactivated")
 
+    def test_reminder(self, configured_cli_no_bg_jobs: ConfiguredCLI):
+        """
+        Verifies that the "sync" command enables the reminder for focus time blocker events that were created without
+        such a reminder.
+        """
+        # Create the blocker event that starts now and is 2 minutes long, having a different reminder time configured
+        old_event_reminder_time_minutes = configured_cli_no_bg_jobs.configuration.event_reminder_time_minutes
+        new_event_reminder_time_minutes = 30
+        assert new_event_reminder_time_minutes != old_event_reminder_time_minutes, "Choose a new reminder time " \
+                                                                                   "that is different"
+        try:
+            configured_cli_no_bg_jobs.configuration.event_reminder_time_minutes = new_event_reminder_time_minutes
+
+            now = datetime.now(ZoneInfo('UTC'))
+            from_date = now
+            to_date = from_date + timedelta(minutes=2)
+            configured_cli_no_bg_jobs.calendar_adapter.create_event(from_date, to_date)
+        finally:
+            # Restore the original setting to avoid causing problems in other tests
+            configured_cli_no_bg_jobs.configuration.event_reminder_time_minutes = old_event_reminder_time_minutes
+
+        # Verify that the event reminder is not set
+        events = configured_cli_no_bg_jobs.calendar_adapter.get_events(from_date=now - timedelta(minutes=1),
+                                                                       to_date=now + timedelta(minutes=2))
+        assert len(events) == 1
+        assert events[0].reminder_in_minutes == new_event_reminder_time_minutes
+
+        # The sync call should set the event reminder time
+        assert self._run_sync_command().startswith("Found a new focus time, calling start command(s) ...")
+
+        events = configured_cli_no_bg_jobs.calendar_adapter.get_events(from_date=now - timedelta(minutes=1),
+                                                                       to_date=now + timedelta(minutes=2))
+        assert len(events) == 1
+        assert events[0].reminder_in_minutes == configured_cli_no_bg_jobs.configuration.event_reminder_time_minutes
+
     @staticmethod
     def _run_sync_command() -> str:
         try:
