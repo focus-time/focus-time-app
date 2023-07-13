@@ -118,8 +118,10 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         o365_event = calendar.new_event(subject=self._configuration.focustime_event_name)
         o365_event.start = from_date
         o365_event.end = to_date
-        if self._configuration.event_reminder_time_minutes > 0:
+        if self._configuration.set_event_reminder and self._configuration.event_reminder_time_minutes > 0:
             o365_event.remind_before_minutes = self._configuration.event_reminder_time_minutes
+        else:
+            o365_event.is_reminder_on = False
 
         success = o365_event.save()
         if not success:
