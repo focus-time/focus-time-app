@@ -57,6 +57,14 @@ class Outlook365KeyringBackend(BaseTokenBackend):
 
         password_string = json.dumps(self.token)
 
+        try:
+            # Avoid problems in rare cases where save_token() would not override ALL slots, and load_token() would
+            # not detect it (via JSONDecodeError), causing errors such as
+            # "CompactToken parsing failed with error code: 80049217"
+            self.delete_token()
+        except:
+            pass
+
         pw_length_limit = Outlook365KeyringBackend.PASSWORD_LENGTH_LIMITATION[sys.platform]
         if pw_length_limit:
             offset = 0
@@ -84,14 +92,3 @@ class Outlook365KeyringBackend(BaseTokenBackend):
                 keyring.delete_password(self._SERVICE_NAME, f"{self._USERNAME}-{i}")
         else:
             keyring.delete_password(self._SERVICE_NAME, self._USERNAME)
-
-    @staticmethod
-    def macos_credentials_hack():
-        """
-        Unsure whether this is needed: On macOS, the "focus-time" binary executed by the integration test creates an
-        entry in the "login" keychain that can only be read from the "focus-time" binary - trying to read it from the
-        pytest ("python" binary) results in an interactive prompt. If this becomes a problem in CI, we can circumvent
-        this by creating a passwordless entry with the command below. The "-A" flag specifies that ALL applications may
-        access the entry.
-        """
-        pass  # security add-generic-password -a FocusTimeApp -s FocusTimeApp -A

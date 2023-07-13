@@ -53,7 +53,7 @@ class ConfigurationCommand:
         configuration = ConfigurationV1(calendar_type=calendar_type, calendar_look_ahead_hours=0,
                                         calendar_look_back_hours=0, focustime_event_name="Foo", start_commands=[],
                                         stop_commands=[], dnd_profile_name="foo",
-                                        adjust_event_reminder_time=False, event_reminder_time_minutes=0)
+                                        set_event_reminder=False, event_reminder_time_minutes=0)
         calendar_adapter = create_calendar_adapter(configuration)
         while True:
             adapter_configuration = calendar_adapter.authenticate()
@@ -146,11 +146,12 @@ class ConfigurationCommand:
 
     @staticmethod
     def _configure_event_reminders(configuration: ConfigurationV1):
-        configuration.adjust_event_reminder_time = \
-            typer.confirm("Do you want the Focus Time app to overwrite the reminder time of the focus time "
-                          "calendar events?", default=True, prompt_suffix='\n')
+        configuration.set_event_reminder = \
+            typer.confirm("Do you want the Focus Time app to set a reminder for the focus time calendar events? "
+                          "The app will also overwrite the reminder setting for existing(!) focus time events that "
+                          "were not created by the app", default=True, prompt_suffix='\n')
 
-        if configuration.adjust_event_reminder_time:
+        if configuration.set_event_reminder:
             configuration.event_reminder_time_minutes = \
                 typer.prompt("How many minutes prior to a focus time calendar event starting should the "
                              "reminder be shown?", type=int, default=15, prompt_suffix='\n')
