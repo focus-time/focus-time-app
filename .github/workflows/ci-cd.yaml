@@ -25,6 +25,7 @@ jobs:
     strategy:
       matrix:
         os: [ macos-latest, windows-latest ]
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -41,7 +42,7 @@ jobs:
         run: |
           pytest tests --junitxml=junit/test-results.xml
         env:
-          CI: "1"
+          CI: "1"  # keep variable name in sync with CI_ENV_VAR_NAME
           OUTLOOK365_EMAIL: ${{ secrets.OUTLOOK365_EMAIL }}
           OUTLOOK365_PASSWORD: ${{ secrets.OUTLOOK365_PASSWORD }}
 

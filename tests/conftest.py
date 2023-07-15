@@ -50,7 +50,7 @@ def start_commands(tmp_path: Path) -> ConfiguredCommands:
         # file
         return ConfiguredCommands(commands=["dnd-start", f"echo start>> {verification_file_path}"],
                                   verification_file_path=verification_file_path)
-    elif sys.platform == "darwin":
+    if sys.platform == "darwin":
         return ConfiguredCommands(commands=[f"echo start >> {verification_file_path}"],
                                   verification_file_path=verification_file_path)
     raise NotImplementedError
@@ -111,7 +111,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
     config = ConfigurationV1(calendar_type=calendar_type, calendar_look_ahead_hours=3, calendar_look_back_hours=5,
                              focustime_event_name=focustime_event_name,
                              start_commands=start_commands.commands, stop_commands=stop_commands.commands,
-                             dnd_profile_name=dnd_profile_name, adjust_event_reminder_time=True,
+                             dnd_profile_name=dnd_profile_name, set_event_reminder=True,
                              event_reminder_time_minutes=15)
 
     Persistence.get_config_file_path().unlink(missing_ok=True)
@@ -151,8 +151,8 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
     write_line_to_stream(config_process.stdin, "")  # indicate that we are done providing commands
 
     out = config_process.stdout.readline()  # asks for whether to overwrite the reminder time of the focus time events
-    write_line_to_stream(config_process.stdin, "Y" if config.adjust_event_reminder_time else "n")
-    if config.adjust_event_reminder_time:
+    write_line_to_stream(config_process.stdin, "Y" if config.set_event_reminder else "n")
+    if config.set_event_reminder:
         out = config_process.stdout.readline()  # asks for reminder minutes
         write_line_to_stream(config_process.stdin, config.event_reminder_time_minutes)
 
