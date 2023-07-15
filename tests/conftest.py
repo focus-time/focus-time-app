@@ -21,7 +21,7 @@ from focus_time_app.configuration.persistence import Persistence
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import CalendarType
 from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import Outlook365CalendarAdapter, \
-    Outlook365TestingOverrides
+    Outlook365TestingOverrides, OUTLOOK365_REDIRECT_URL
 from tests.test_utils import get_frozen_binary_path, clean_calendar, get_random_event_name_postfix
 
 OUTLOOK365_TEST_CLIENT_ID = "bcc815bb-01d0-4765-ae14-e2bf0ee22445"
@@ -241,7 +241,7 @@ def get_outlook365_authorization_code_url(request_url: str) -> str:
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(NEXTBUTTON)).click()
 
     driver.get(request_url)
-    WebDriverWait(driver, 10).until(EC.url_matches("https://login.microsoftonline.com/common/oauth2/nativeclient"))
+    WebDriverWait(driver, 10).until(EC.url_matches(OUTLOOK365_REDIRECT_URL))
     return driver.current_url
 
 

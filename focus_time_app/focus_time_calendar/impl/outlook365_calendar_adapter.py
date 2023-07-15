@@ -16,6 +16,8 @@ from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 from focus_time_app.focus_time_calendar.impl.outlook365_keyring_backend import Outlook365KeyringBackend
 from focus_time_app.utils import CI_ENV_VAR_NAME
 
+OUTLOOK365_REDIRECT_URL = "https://focus-time.github.io/focus-time-app"
+
 
 @dataclass
 class Outlook365TestingOverrides:
@@ -31,8 +33,9 @@ def consent_input_token(consent_url: str):
     if os.getenv(CI_ENV_VAR_NAME, None) is None:
         typer.launch(consent_url)
     typer.echo("After you logged into your Microsoft account and granted consent, your browser should have redirected "
-               "you to an empty (white) web page")
-    return typer.prompt("Please copy the URL from the browser's address bar and paste it here, then press Enter",
+               "you to a web page that shows the code that you need to paste here")
+    return typer.prompt("On the page, please click the 'Copy' button, then "
+                        "paste the clipboard content here, then press Enter",
                         prompt_suffix='\n')
 
 
@@ -60,7 +63,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         handle_consent_callback = consent_input_token if self._testing_overrides is None \
             else self._testing_overrides.handle_consent_callback
         if self._account.authenticate(scopes=["basic", "calendar_all"],
-                                      handle_consent=handle_consent_callback):
+                                      handle_consent=handle_consent_callback, redirect_uri=OUTLOOK365_REDIRECT_URL):
             typer.echo("Retrieving the list of calendars ...")
             schedule: Schedule = self._account.schedule()
             calendars = schedule.list_calendars()
