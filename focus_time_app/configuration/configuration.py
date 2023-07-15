@@ -27,7 +27,7 @@ class ConfigurationV1:
     stop_commands: List[str]
     dnd_profile_name: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
     set_event_reminder: bool
-    event_reminder_time_minutes: int = field(metadata={"validate": marshmallow.validate.Range(min=1)})
+    event_reminder_time_minutes: int = field(metadata={"validate": marshmallow.validate.Range(min=0)})
     version: int = field(default=1)
     adapter_configuration: Optional[Dict[str, Any]] = field(default=None)
 

@@ -152,6 +152,9 @@ class ConfigurationCommand:
                           "were not created by the app", default=True, prompt_suffix='\n')
 
         if configuration.set_event_reminder:
-            configuration.event_reminder_time_minutes = \
-                typer.prompt("How many minutes prior to a focus time calendar event starting should the "
-                             "reminder be shown?", type=int, default=15, prompt_suffix='\n')
+            while True:
+                configuration.event_reminder_time_minutes = \
+                    typer.prompt("How many minutes prior to a focus time calendar event starting should the "
+                                 "reminder be shown?", type=int, default=15, prompt_suffix='\n')
+                if configuration.event_reminder_time_minutes > 0:
+                    break
