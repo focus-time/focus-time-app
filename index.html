@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authentication successful</title>
+    <script>
+        function copyToClipboard() {
+            var copyText = document.getElementById("urlInput");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            //document.execCommand("copy");
+            navigator.clipboard.writeText(copyText.value);
+            alert("URL copied to clipboard!");
+        }
+
+        window.addEventListener('DOMContentLoaded', (event) => {
+            var urlInput = document.getElementById("urlInput");
+            urlInput.value = window.location.href;
+        });
+    </script>
+</head>
+<body>
+<h1>Authentication successful</h1>
+<p>Please copy the following token back into the shell window.</p>
+<input type="text" id="urlInput" disabled>
+<button onclick="copyToClipboard()">Copy</button>
+</body>
+</html>
