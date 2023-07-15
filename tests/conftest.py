@@ -50,7 +50,7 @@ def start_commands(tmp_path: Path) -> ConfiguredCommands:
         # file
         return ConfiguredCommands(commands=["dnd-start", f"echo start>> {verification_file_path}"],
                                   verification_file_path=verification_file_path)
-    elif sys.platform == "darwin":
+    if sys.platform == "darwin":
         return ConfiguredCommands(commands=[f"echo start >> {verification_file_path}"],
                                   verification_file_path=verification_file_path)
     raise NotImplementedError

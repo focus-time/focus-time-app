@@ -20,8 +20,6 @@ class TestUninstallSyncCommand:
         Verifies that after successfully running the "uninstall" command (which, among other things, uninstalls the
         background scheduler), the "sync" command is no longer triggered by the background scheduler.
         """
-        configured_cli_with_bg_jobs.verification_file_path.unlink(missing_ok=True)  # TODO do this centrally in conftest
-
         run_cli_command_handle_output_error("start", additional_args=["1"])  # 1 minute
 
         if CommandExecutorImpl.is_dnd_helper_installed():

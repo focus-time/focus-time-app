@@ -26,7 +26,6 @@ class TestCLISyncCommand:
         Note: DND / Focus time mode is only verified if the helper is actually installed.
         """
         calendar_adapter = configured_cli_no_bg_jobs.calendar_adapter
-        configured_cli_no_bg_jobs.verification_file_path.unlink(missing_ok=True)
 
         # Create the blocker event that starts in 1 minute and is 2 minutes long
         from_date = datetime.now(ZoneInfo('UTC')) + timedelta(minutes=1)
@@ -81,7 +80,6 @@ class TestCLISyncCommand:
         is expected to make the sync call internally.
         """
         calendar_adapter = configured_cli_with_bg_jobs.calendar_adapter
-        configured_cli_with_bg_jobs.verification_file_path.unlink(missing_ok=True)
 
         # Create the blocker event that starts now and is 2 minutes long
         from_date = datetime.now(ZoneInfo('UTC'))
