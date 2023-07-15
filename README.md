@@ -57,7 +57,7 @@ running `focus-time [command] --help`. Here is a brief overview of the available
     - If you use a _personal_ Outlook 365 account, you can use the client ID `bcc815bb-01d0-4765-ae14-e2bf0ee22445`
     - If you use an Outlook 365 account _for work_, ask your company's Microsoft AAD admin to create a new _App
       registration_ on https://portal.azure.com. The _Redirect URL_ must be set to "Public client/native (mobile &
-      desktop)" and point to `https://login.microsoftonline.com/common/oauth2/nativeclient`. Under _API permissions_,
+      desktop)" and point to `https://focus-time.github.io/focus-time-app`. Under _API permissions_,
       add _Microsoft Graph_ permissions for `Calendars.ReadWrite` and `offline_access`. The latter permission avoids
       that you need to constantly re-authenticate, by providing OIDC refresh tokens that are valid for 90 days
     - Once the configuration has completed successfully, the path to the configuration file is printed to the console.
