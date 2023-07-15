@@ -10,19 +10,20 @@ time period begins or ends.
 
 For now, **only Outlook 365 calendars are supported**.
 
-
 ## Features
 
 - Easy to set up: there is a dedicated configuration command that interactively queries all necessary information
 - Various configuration settings, such as:
     - The title/subject of the focus time blocker events
-    - Optionally overwrite _reminder_ (in minutes) of the focus time blocker events (useful if you did not create them
-      yourself, but e.g. used Microsoft Viva Insights)
+    - The reminder (_off_, or _on_ and the number of minutes) of the focus time blocker events. This also overwrites
+      the reminder of _existing_ events, which is useful if you did not create them yourself, but e.g. used Microsoft
+      Viva Insights)
     - List of shell commands to run when a focus time event starts or ends, including the special commands `dnd-start`
       or `dnd-stop` which control your operating system's Do-Not-Disturb / Focus mode
-    - The Windows _focus assist_ to be used ("Priority only", "Alarms only")
-- Ability to start (or end) focus times for a configurable duration (the tool creates a blocker event in your calendar
-  when _starting_ an adhoc session, or shortens the ongoing calendar event when _stopping_ an adhoc session)
+    - The Windows _focus assist_ profile to be used ("Priority only" or "Alarms only")
+- Ability to start (or stop) _ad-hoc_ focus time sessions for a configurable duration: the tool creates a blocker event
+  in your calendar when _starting_ an adhoc session, or shortens the ongoing calendar event when _stopping_ an adhoc
+  session)
 
 ## Installation
 
