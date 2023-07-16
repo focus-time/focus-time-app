@@ -1,1 +1,0 @@
-FOCUS_TIME_APP_VERSION = "0.2-dev"

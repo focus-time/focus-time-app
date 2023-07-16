@@ -1,18 +1,20 @@
 import logging
+import sys
+from pathlib import Path
 from typing import Tuple, Annotated
 
 import typer
 
-from focus_time_app import FOCUS_TIME_APP_VERSION
-from focus_time_app.cli.commands.uninstall_command import UninstallCommand
-from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
-from focus_time_app.focus_time_calendar.adapter_factory import create_calendar_adapter
 from focus_time_app.cli.commands.configuration_command import ConfigurationCommand
 from focus_time_app.cli.commands.start_command import StartCommand
 from focus_time_app.cli.commands.stop_command import StopCommand
 from focus_time_app.cli.commands.sync_command import SyncCommand
+from focus_time_app.cli.commands.uninstall_command import UninstallCommand
 from focus_time_app.configuration.configuration import ConfigurationV1
 from focus_time_app.configuration.persistence import Persistence
+from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
+from focus_time_app.focus_time_calendar.adapter_factory import create_calendar_adapter
+from focus_time_app.utils import is_production_environment
 
 app = typer.Typer(help="CLI tool that triggers your desktop OS's Do-Not-Disturb feature (and other arbitrary scripts), "
                        "based on blocker events on your calendar.", pretty_exceptions_enable=False)
@@ -150,4 +152,19 @@ def version():
     """
     Prints the version of the Focus time app tool.
     """
-    typer.echo(f"Focus time app v{FOCUS_TIME_APP_VERSION}")
+    typer.echo(f"Focus time app {get_version()}")
+
+
+def get_version() -> str:
+    """
+    Determines the version of the tool, which is either "devel", or can be read from the focustime-version-info.txt file
+    which is auto-generated in the GitHub "build-app" action for Git tags.
+    """
+    if is_production_environment():
+        try:
+            version_info_file = Path(sys.executable).parent / "focustime-version-info.txt"
+            return version_info_file.read_text().strip()
+        except:
+            pass
+
+    return "devel"
