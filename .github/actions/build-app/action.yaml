@@ -22,7 +22,7 @@ runs:
         pyinstaller pyinstaller.spec
       shell: ${{ inputs.os == 'windows-latest' && 'powershell' || 'bash' }}
     - name: Create release version info file for tags
-      run: echo ${{ github.ref_name }}>> ${{ inputs.dist-app-dir }}/focustime-version-info.txt
+      run: echo ${{ github.ref_name }} >> ${{ inputs.dist-app-dir }}/focustime-version-info.txt
       shell: ${{ inputs.os == 'windows-latest' && 'powershell' || 'bash' }}
       if: startsWith(github.ref, 'refs/tags/')
     - name: Compute Filename
