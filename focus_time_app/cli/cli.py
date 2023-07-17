@@ -163,7 +163,9 @@ def get_version() -> str:
     if is_production_environment():
         try:
             version_info_file = Path(sys.executable).parent / "focustime-version-info.txt"
-            return version_info_file.read_text().strip()
+            # The Windows Powershell 'echo' in CI outputs UTF-16 by default
+            encoding = "utf-16" if sys.platform == "win32" else None
+            return version_info_file.read_text(encoding=encoding).strip()
         except:
             pass
 
