@@ -1,8 +1,9 @@
 import sys
 from os import getenv
 
-CI_ENV_VAR_NAME = "CI"  # keep the value in sync with env vars set in the CI/CD YAML (workflow) files
-
+# keep the values in sync with env vars set in the CI/CD YAML (workflow) files
+CI_ENV_VAR_NAME = "CI"
+USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME = "USE_INSECURE_PASSWORD_PROMPT"
 
 def is_production_environment() -> bool:
     return getattr(sys, 'frozen', False)

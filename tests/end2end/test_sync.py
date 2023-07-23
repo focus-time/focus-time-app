@@ -3,7 +3,10 @@ import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from focus_time_app.command_execution import CommandExecutorImpl
+from focus_time_app.focus_time_calendar.event import CalendarType
 from tests.conftest import ConfiguredCLI
 from tests.test_utils import run_cli_command_handle_output_error
 
@@ -14,7 +17,8 @@ class TestCLISyncCommand:
     """
     Tests the "sync" CLI command.
 
-    Note: you should set the environment variable defined in CI_ENV_VAR_NAME to any value when running pytest.
+    Note: you should set the environment variable defined in CI_ENV_VAR_NAME and
+    USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME to any value when running pytest.
     """
 
     def test_manual_on_off_sync(self, configured_cli_no_bg_jobs: ConfiguredCLI):
@@ -25,6 +29,9 @@ class TestCLISyncCommand:
 
         Note: DND / Focus time mode is only verified if the helper is actually installed.
         """
+        if configured_cli_no_bg_jobs.configuration.calendar_type is CalendarType.CalDAV:
+            pytest.skip("As this test is slow (due to 'sleep()'), run it only for Outlook365")
+
         calendar_adapter = configured_cli_no_bg_jobs.calendar_adapter
 
         # Create the blocker event that starts in 1 minute and is 2 minutes long

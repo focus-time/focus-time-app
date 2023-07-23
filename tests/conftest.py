@@ -16,12 +16,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from focus_time_app.cli.background_scheduler import BackgroundSchedulerImpl
 from focus_time_app.command_execution import CommandExecutorImpl
 from focus_time_app.command_execution.abstract_command_executor import CommandExecutorConstants
-from focus_time_app.configuration.configuration import ConfigurationV1, Outlook365ConfigurationV1
+from focus_time_app.configuration.configuration import ConfigurationV1, Outlook365ConfigurationV1, CaldavConfigurationV1
 from focus_time_app.configuration.persistence import Persistence
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import CalendarType
 from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import Outlook365CalendarAdapter, \
     Outlook365TestingOverrides, OUTLOOK365_REDIRECT_URL
+from focus_time_app.focus_time_calendar.impl.webdav_calendar_adapter import CaldavCalendarAdapter, \
+    CaldavTestingOverrides
+from tests import CalDavTestCredentials
 from tests.test_utils import get_frozen_binary_path, clean_calendar, get_random_event_name_postfix
 
 OUTLOOK365_TEST_CLIENT_ID = "bcc815bb-01d0-4765-ae14-e2bf0ee22445"
@@ -85,7 +88,7 @@ class ConfiguredCLI:
     verification_file_path: Path
 
 
-@pytest.fixture(params=[CalendarType.Outlook365])
+@pytest.fixture(params=[CalendarType.Outlook365, CalendarType.CalDAV])
 def configured_cli_no_bg_jobs(request, start_commands, stop_commands) -> ConfiguredCLI:
     yield from configured_cli(request.param, skip_background_scheduler_setup=True, start_commands=start_commands,
                               stop_commands=stop_commands)
@@ -130,6 +133,8 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
 
     if calendar_type is CalendarType.Outlook365:
         configure_outlook365_calendar_adapter(config_process, config)
+    elif calendar_type is CalendarType.CalDAV:
+        configure_caldav_calendar_adapter(config_process, config)
 
     out = config_process.stdout.readline()  # What is the title or subject of your Focus time events in your calendar?
     write_line_to_stream(config_process.stdin, config.focustime_event_name)
@@ -215,6 +220,22 @@ def configure_outlook365_calendar_adapter(config_process: Popen, config: Configu
     config.adapter_configuration = outlook_configuration_v1_schema.dump(adapter_configuration)
 
 
+def configure_caldav_calendar_adapter(config_process: Popen, config: ConfigurationV1):
+    test_credentials = CalDavTestCredentials.read_from_env()
+    adapter_configuration = CaldavConfigurationV1(calendar_url=test_credentials.calendar_url)
+    write_line_to_stream(config_process.stdin, "2")  # Use CalDAV
+    out = config_process.stdout.readline()  # asks for server URL
+    write_line_to_stream(config_process.stdin, test_credentials.calendar_url)
+    out = config_process.stdout.readline()  # asks for username
+    write_line_to_stream(config_process.stdin, test_credentials.username)
+    out = config_process.stdout.readline()  # asks for password
+    write_line_to_stream(config_process.stdin, test_credentials.password)
+    out = config_process.stdout.readline()  # prints info about finding only one calendar, which is automatically used
+
+    caldav_configuration_v1_schema = marshmallow_dataclass.class_schema(CaldavConfigurationV1)()
+    config.adapter_configuration = caldav_configuration_v1_schema.dump(adapter_configuration)
+
+
 def get_outlook365_authorization_code_url(request_url: str) -> str:
     EMAILFIELD = (By.ID, "i0116")
     PASSWORDFIELD = (By.ID, "i0118")
@@ -264,6 +285,20 @@ def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) 
             calendar_name="Calendar"
         )
         adapter = Outlook365CalendarAdapter(configuration=configuration, testing_overrides=testing_overrides)
+        adapter.authenticate()
+    elif configuration.calendar_type is CalendarType.CalDAV:
+        test_credentials = CalDavTestCredentials.read_from_env()
+
+        def get_creds():
+            return test_credentials.username, test_credentials.password
+
+        testing_overrides = CaldavTestingOverrides(
+            credentials_callback=get_creds,
+            server_url=test_credentials.calendar_url,
+            namespace="ci-runner",
+            calendar_url=test_credentials.calendar_url
+        )
+        adapter = CaldavCalendarAdapter(configuration=configuration, testing_overrides=testing_overrides)
         adapter.authenticate()
     else:
         raise NotImplementedError

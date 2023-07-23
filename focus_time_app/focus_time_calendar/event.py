@@ -5,6 +5,7 @@ from enum import Enum
 
 class CalendarType(Enum):
     Outlook365 = 1
+    CalDAV = 2
 
 
 @dataclass
