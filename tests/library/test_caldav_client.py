@@ -14,7 +14,7 @@ logger = logging.getLogger("TestCalDavClient")
 
 @pytest.fixture
 def caldav_calendar() -> caldav.Calendar:
-    test_credentials = CalDavTestCredentials.read_from_env()
+    test_credentials = CalDavTestCredentials.read_from_env(use_dedicated_unit_test_calendar=True)
     with caldav.DAVClient(url=test_credentials.calendar_url, username=test_credentials.username,
                           password=test_credentials.password) as client:
         client.propfind()

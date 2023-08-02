@@ -10,7 +10,7 @@ from tests.utils.abstract_testing_calendar_adapter import AbstractTestingCalenda
 class CaldavTestingCalendarAdapter(AbstractTestingCalendarAdapter, CaldavCalendarAdapter):
     def __init__(self, configuration: ConfigurationV1):
         super().__init__(configuration, environment_namespace_override=CI_ENV_NAMESPACE_OVERRIDE)
-        self._test_credentials = CalDavTestCredentials.read_from_env()
+        self._test_credentials = CalDavTestCredentials.read_from_env(use_dedicated_unit_test_calendar=False)
 
     def _get_server_url(self) -> str:
         return self._test_credentials.calendar_url

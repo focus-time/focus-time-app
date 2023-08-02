@@ -227,7 +227,7 @@ def configure_outlook365_calendar_adapter(config_process: Popen, config: Configu
 
 
 def configure_caldav_calendar_adapter(config_process: Popen, config: ConfigurationV1):
-    test_credentials = CalDavTestCredentials.read_from_env()
+    test_credentials = CalDavTestCredentials.read_from_env(use_dedicated_unit_test_calendar=False)
     adapter_configuration = CaldavConfigurationV1(calendar_url=test_credentials.calendar_url)
     write_line_to_stream(config_process.stdin, "2")  # Use CalDAV
     out = config_process.stdout.readline()  # asks for server URL
