@@ -1,7 +1,7 @@
 import caldav
 
 from focus_time_app.configuration.configuration import ConfigurationV1
-from focus_time_app.focus_time_calendar.impl.webdav_calendar_adapter import CaldavCalendarAdapter
+from focus_time_app.focus_time_calendar.impl.caldav_calendar_adapter import CaldavCalendarAdapter
 from tests import CalDavTestCredentials
 from tests.utils import CI_ENV_NAMESPACE_OVERRIDE
 from tests.utils.abstract_testing_calendar_adapter import AbstractTestingCalendarAdapter
