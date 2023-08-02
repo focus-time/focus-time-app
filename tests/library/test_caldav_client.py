@@ -1,4 +1,5 @@
 import logging
+import sys
 from datetime import datetime, timedelta
 from typing import Tuple
 from zoneinfo import ZoneInfo
@@ -21,7 +22,7 @@ def caldav_calendar() -> caldav.Calendar:
         my_principal = client.principal()
         calendars = my_principal.calendars()
         assert len(calendars) > 0
-        calendar = calendars[0]
+        calendar = [c for c in calendars if str(c.url) == test_credentials.calendar_url][0]
 
         events = calendar.search(start=datetime.now(ZoneInfo('UTC')) - timedelta(days=1),
                                  end=datetime.now(ZoneInfo('UTC')) + timedelta(days=1), event=True, expand=True)
@@ -42,6 +43,8 @@ def get_typical_search_time_window() -> Tuple[datetime, datetime]:
     return start, end
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="Avoid problematic interferences when running multiple "
+                                                     "instances of this test in parallel in CI")
 class TestCalDavClient:
     """
     Tests various features of the CalDAV Python library
