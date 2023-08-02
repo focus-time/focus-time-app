@@ -99,7 +99,8 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
 
         reminder_in_minutes = 0
         if self._configuration.set_event_reminder and self._configuration.event_reminder_time_minutes > 0:
-            self._add_reminder_to_event_and_save(event)
+            self._add_reminder_to_event_and_save(event,
+                                                 reminder_time_minutes=self._configuration.event_reminder_time_minutes)
             reminder_in_minutes = self._configuration.event_reminder_time_minutes
 
         return FocusTimeEvent(id=event.icalendar_component["uid"], start=from_date, end=to_date,
@@ -116,7 +117,7 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
         if reminder_in_minutes is not None:
             self._remove_all_reminders_and_save(caldav_event)
             if reminder_in_minutes > 0:
-                self._add_reminder_to_event_and_save(caldav_event)
+                self._add_reminder_to_event_and_save(caldav_event, reminder_time_minutes=reminder_in_minutes)
 
         caldav_event.save()
 
@@ -179,10 +180,10 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
         return FocusTimeEvent(id=e.icalendar_component["uid"], start=e.icalendar_component["dtstart"].dt,
                               end=e.icalendar_component["dtend"].dt, reminder_in_minutes=reminder_minutes)
 
-    def _add_reminder_to_event_and_save(self, event: caldav.CalendarObjectResource):
+    def _add_reminder_to_event_and_save(self, event: caldav.CalendarObjectResource, reminder_time_minutes: int):
         ia = icalendar.Alarm()
         ia.add("action", "DISPLAY")
-        ia.add("trigger", timedelta(minutes=-1 * self._configuration.event_reminder_time_minutes))
+        ia.add("trigger", timedelta(minutes=-1 * reminder_time_minutes))
         event.icalendar_component.add_component(ia)
         event.save()
 
