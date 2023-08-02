@@ -1,45 +1,24 @@
 import json
 import logging
-import math
-import sys
 from json import JSONDecodeError
 from typing import Optional
 
-import keyring
 from O365.utils import BaseTokenBackend
-from keyring.errors import PasswordDeleteError
 
-from focus_time_app.utils import get_environment_suffix
+from focus_time_app.focus_time_calendar.impl.keyring_credentials_store import KeyringCredentialsStore
 
 
 class Outlook365KeyringBackend(BaseTokenBackend):
-    PASSWORD_LENGTH_LIMITATION = {
-        "win32": 500,
-        "darwin": 0  # unlimited
-    }
-
     def __init__(self, namespace_override: Optional[str] = None):
         super().__init__()
-        namespace_suffix = f"-{namespace_override}" if namespace_override else get_environment_suffix()
-        self._SERVICE_NAME = "FocusTimeApp" + namespace_suffix
-        self._USERNAME = "FocusTimeApp" + namespace_suffix
+        self._credentials_store = KeyringCredentialsStore(namespace_override=namespace_override)
         self._logger = logging.getLogger(type(self).__name__)
 
     def load_token(self):
         if self.token:
             return self.token
 
-        pw_length_limit = Outlook365KeyringBackend.PASSWORD_LENGTH_LIMITATION[sys.platform]
-        password_string = ""
-        if pw_length_limit:
-            for i in range(999999):
-                password_substring = keyring.get_password(self._SERVICE_NAME, f"{self._USERNAME}-{i}")
-                if not password_substring:
-                    break
-                password_string += password_substring
-        else:
-            password_string = keyring.get_password(self._SERVICE_NAME, self._USERNAME)
-
+        password_string = self._credentials_store.load_credentials()
         if password_string:
             try:
                 return json.loads(password_string)
@@ -65,30 +44,8 @@ class Outlook365KeyringBackend(BaseTokenBackend):
         except:
             pass
 
-        pw_length_limit = Outlook365KeyringBackend.PASSWORD_LENGTH_LIMITATION[sys.platform]
-        if pw_length_limit:
-            offset = 0
-            for offset in range(math.ceil(len(password_string) / pw_length_limit)):
-                password_subset = password_string[offset * pw_length_limit: offset * pw_length_limit + pw_length_limit]
-                keyring.set_password(self._SERVICE_NAME, f"{self._USERNAME}-{offset}", password_subset)
-
-            # Make sure to break the sequence of older (not-properly deleted) passwords, if they exist
-            try:
-                keyring.delete_password(self._SERVICE_NAME, f"{self._USERNAME}-{offset + 1}")
-            except PasswordDeleteError:
-                pass
-        else:
-            keyring.set_password(self._SERVICE_NAME, self._USERNAME, password_string)
-
+        self._credentials_store.save_credentials(password_string)
         return True
 
     def delete_token(self):
-        pw_length_limit = Outlook365KeyringBackend.PASSWORD_LENGTH_LIMITATION[sys.platform]
-        if pw_length_limit:
-            for i in range(999999):
-                password_substring = keyring.get_password(self._SERVICE_NAME, f"{self._USERNAME}-{i}")
-                if not password_substring:
-                    break
-                keyring.delete_password(self._SERVICE_NAME, f"{self._USERNAME}-{i}")
-        else:
-            keyring.delete_password(self._SERVICE_NAME, self._USERNAME)
+        self._credentials_store.delete_credentials()

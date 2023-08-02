@@ -18,6 +18,11 @@ class Outlook365ConfigurationV1:
 
 
 @dataclass
+class CaldavConfigurationV1:
+    calendar_url: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
+
+
+@dataclass
 class ConfigurationV1:
     calendar_type: CalendarType = field(metadata={"marshmallow_field": Enum(CalendarType)})
     calendar_look_ahead_hours: int = field(metadata={"validate": marshmallow.validate.Range(min=0)})

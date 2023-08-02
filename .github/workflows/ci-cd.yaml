@@ -43,8 +43,12 @@ jobs:
           pytest tests --junitxml=junit/test-results.xml
         env:
           CI: "1"  # keep variable name in sync with CI_ENV_VAR_NAME
+          USE_INSECURE_PASSWORD_PROMPT: "1"  # keep variable name in sync with USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME
           OUTLOOK365_EMAIL: ${{ secrets.OUTLOOK365_EMAIL }}
           OUTLOOK365_PASSWORD: ${{ secrets.OUTLOOK365_PASSWORD }}
+          CALDAV_CALENDAR_URL: ${{ secrets.CALDAV_CALENDAR_URL }}
+          CALDAV_USERNAME: ${{ secrets.CALDAV_USERNAME }}
+          CALDAV_PASSWORD: ${{ secrets.CALDAV_PASSWORD }}
 
       - name: Upload Test Results
         if: always() && startsWith(github.ref, 'refs/tags/') == false

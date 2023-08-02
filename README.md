@@ -8,7 +8,8 @@ It saves you from having to _manually_ start or stop your operating system's "Do
 close/open programs, etc., whenever a focus
 time period begins or ends.
 
-For now, **only Outlook 365 calendars are supported**.
+For now, **only Outlook 365 and CalDAV calendars are supported**. CalDAV support is in an early stage and may still 
+have several problems, depending on the calendar provider/server.
 
 ## Features
 
@@ -111,3 +112,9 @@ For the time being, the implementation of the following features is **not** plan
 - Linux support
 - Offering _signed_ binaries for macOS: we do not have an Apple _developer_ account, nor do we intend to pay extortion
   money to Apple. Also, implementing automated signing+notarization of the application is not trivial
+
+## Development notes
+
+- If you use PyCharm on Windows, in a _run configuration_ you need to enable the checkbox _Emulate terminal in output
+  console_ so that retrieving passwords works
+  properly ([background](https://youtrack.jetbrains.com/issue/PY-1823/getpass-should-accept-input-in-IDE-console))
