@@ -8,7 +8,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from focus_time_app.configuration.configuration import ConfigurationV1
 from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import Outlook365CalendarAdapter
-from focus_time_calendar.impl.outlook365_calendar_adapter import OUTLOOK365_REDIRECT_URL
+from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import OUTLOOK365_REDIRECT_URL
 from tests import OUTLOOK365_TEST_CLIENT_ID
 from tests.utils import CI_ENV_NAMESPACE_OVERRIDE
 from tests.utils.abstract_testing_calendar_adapter import AbstractTestingCalendarAdapter
