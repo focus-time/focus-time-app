@@ -38,7 +38,7 @@ class TestCalendar:
         assert events[0].start == from_date
         assert events[0].end == to_date
 
-        empty_query_from = now + timedelta(hours=1)
+        empty_query_from = now + timedelta(hours=2)
         empty_query_to = empty_query_from + timedelta(hours=5)
         events_timeshifted = configured_calendar_adapter.get_events(date_range=(empty_query_from, empty_query_to))
         assert not events_timeshifted
