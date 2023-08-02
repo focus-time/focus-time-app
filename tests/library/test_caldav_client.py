@@ -7,7 +7,7 @@ import caldav
 import icalendar
 import pytest
 
-from tests import CalDavTestCredentials
+from tests import CalDavTestCredentials, now_without_micros
 
 logger = logging.getLogger("TestCalDavClient")
 
@@ -29,13 +29,6 @@ def caldav_calendar() -> caldav.Calendar:
             event.delete()
 
         yield calendar
-
-
-def now_without_micros() -> datetime:
-    now = datetime.now(ZoneInfo('UTC'))
-    if now.microsecond:
-        now = now - timedelta(microseconds=now.microsecond)
-    return now
 
 
 def get_typical_search_time_window() -> Tuple[datetime, datetime]:

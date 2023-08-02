@@ -56,7 +56,7 @@ def stop_commands(tmp_path: Path) -> ConfiguredCommands:
     """
     Returns the stop command(s) that should be run by the Focus time app. The commands depend on the operating system.
     """
-    verification_file_path = str(tmp_path / "verification.txt")
+    verification_file_path = tmp_path / "verification.txt"
     if sys.platform == "win32":
         # Note: you need to omit the <space> between "stop" and ">>" as otherwise the space would become part of the
         # file
@@ -259,4 +259,5 @@ def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) 
 
     adapter.authenticate()
     adapter.check_connection_and_credentials()
+    adapter.clean_calendar()
     return adapter

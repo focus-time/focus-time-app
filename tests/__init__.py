@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from os import getenv
+from zoneinfo import ZoneInfo
 
 
 @dataclass
@@ -21,3 +23,14 @@ class CalDavTestCredentials:
 
 
 OUTLOOK365_TEST_CLIENT_ID = "bcc815bb-01d0-4765-ae14-e2bf0ee22445"
+
+
+def now_without_micros() -> datetime:
+    """
+    Helper method that returns a <now> datetime object, but with micro-seconds set to 0, because some calendar
+    implementations do not support such a high timestamp accuracy.
+    """
+    now = datetime.now(ZoneInfo('UTC'))
+    if now.microsecond:
+        now = now - timedelta(microseconds=now.microsecond)
+    return now
