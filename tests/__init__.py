@@ -18,3 +18,6 @@ class CalDavTestCredentials:
                              "must be set")
 
         return CalDavTestCredentials(calendar_url=calendar_url, username=username, password=password)
+
+
+OUTLOOK365_TEST_CLIENT_ID = "bcc815bb-01d0-4765-ae14-e2bf0ee22445"

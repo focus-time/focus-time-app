@@ -1,33 +1,25 @@
 import subprocess
 import sys
 from dataclasses import dataclass
-from os import getenv
 from pathlib import Path
 from subprocess import Popen
 from typing import IO, Any, List
 
 import marshmallow_dataclass
 import pytest
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
 from focus_time_app.cli.background_scheduler import BackgroundSchedulerImpl
 from focus_time_app.command_execution import CommandExecutorImpl
 from focus_time_app.command_execution.abstract_command_executor import CommandExecutorConstants
 from focus_time_app.configuration.configuration import ConfigurationV1, Outlook365ConfigurationV1, CaldavConfigurationV1
 from focus_time_app.configuration.persistence import Persistence
-from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import CalendarType
-from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import Outlook365CalendarAdapter, \
-    Outlook365TestingOverrides, OUTLOOK365_REDIRECT_URL
-from focus_time_app.focus_time_calendar.impl.webdav_calendar_adapter import CaldavCalendarAdapter, \
-    CaldavTestingOverrides
-from tests import CalDavTestCredentials
-from tests.test_utils import get_frozen_binary_path, clean_calendar, get_random_event_name_postfix
-
-OUTLOOK365_TEST_CLIENT_ID = "bcc815bb-01d0-4765-ae14-e2bf0ee22445"
+from tests import CalDavTestCredentials, OUTLOOK365_TEST_CLIENT_ID
+from tests.utils import get_random_event_name_postfix, get_frozen_binary_path
+from tests.utils.abstract_testing_calendar_adapter import AbstractTestingCalendarAdapter
+from tests.utils.caldav_testing_calendar_adapter import CaldavTestingCalendarAdapter
+from tests.utils.outlook365_testing_calendar_adapter import get_outlook365_authorization_code_url, \
+    Outlook365TestingCalendarAdapter
 
 
 @dataclass
@@ -84,7 +76,7 @@ def write_line_to_stream(stream: IO, input: Any):
 @dataclass
 class ConfiguredCLI:
     configuration: ConfigurationV1
-    calendar_adapter: AbstractCalendarAdapter
+    calendar_adapter: AbstractTestingCalendarAdapter
     verification_file_path: Path
 
 
@@ -98,6 +90,20 @@ def configured_cli_no_bg_jobs(request, start_commands, stop_commands) -> Configu
 def configured_cli_with_bg_jobs(request, start_commands, stop_commands) -> ConfiguredCLI:
     yield from configured_cli(request.param, skip_background_scheduler_setup=False, start_commands=start_commands,
                               stop_commands=stop_commands)
+
+
+@pytest.fixture(params=[CalendarType.Outlook365, CalendarType.CalDAV])
+def configured_calendar_adapter(request, start_commands, stop_commands) -> AbstractTestingCalendarAdapter:
+    dnd_profile_name = CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE if sys.platform == "win32" \
+        else "unused"
+    focustime_event_name = "Focustime-" + get_random_event_name_postfix()
+    config = ConfigurationV1(calendar_type=request.param, calendar_look_ahead_hours=3, calendar_look_back_hours=5,
+                             focustime_event_name=focustime_event_name,
+                             start_commands=start_commands.commands, stop_commands=stop_commands.commands,
+                             dnd_profile_name=dnd_profile_name, set_event_reminder=True,
+                             event_reminder_time_minutes=15)
+
+    return get_configured_calendar_adapter_for_testing(config)
 
 
 def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup: bool,
@@ -180,7 +186,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
     yield ConfiguredCLI(configuration=config, calendar_adapter=calendar_adapter,
                         verification_file_path=start_commands.verification_file_path)
 
-    clean_calendar(configuration=config, calendar_adapter=calendar_adapter)
+    calendar_adapter.clean_calendar()
     reset_dnd_and_bg_scheduler()
 
 
@@ -236,72 +242,21 @@ def configure_caldav_calendar_adapter(config_process: Popen, config: Configurati
     config.adapter_configuration = caldav_configuration_v1_schema.dump(adapter_configuration)
 
 
-def get_outlook365_authorization_code_url(request_url: str) -> str:
-    EMAILFIELD = (By.ID, "i0116")
-    PASSWORDFIELD = (By.ID, "i0118")
-    NEXTBUTTON = (By.ID, "idSIButton9")
-
-    email = getenv("OUTLOOK365_EMAIL", None)
-    password = getenv("OUTLOOK365_PASSWORD", None)
-    if email is None or password is None:
-        raise ValueError("Environment variables OUTLOOK365_EMAIL and OUTLOOK365_PASSWORD must be set")
-
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    driver = webdriver.Chrome(options=options)
-    driver.get('https://login.live.com')
-
-    # wait for email field and enter email
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(EMAILFIELD)).send_keys(email)
-    # Click Next
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(NEXTBUTTON)).click()
-
-    # wait for password field
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(PASSWORDFIELD)).send_keys(password)
-    # Click Next
-    WebDriverWait(driver, 10).until(EC.element_to_be_clickable(NEXTBUTTON)).click()
-
-    driver.get(request_url)
-    WebDriverWait(driver, 10).until(EC.url_matches(OUTLOOK365_REDIRECT_URL))
-    return driver.current_url
-
-
-def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) -> AbstractCalendarAdapter:
+def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) -> AbstractTestingCalendarAdapter:
     """
     Creates a dedicated calendar adapter for the automated test. This is particularly necessary because on macOS,
     there are issues with the Keychain access, which make it impossible to "reuse" the credentials created by the
     frozen focus-time app that being tested: in general, the credentials created in a keychain by app #A (e.g. the
     frozen focus-time binary) cannot be read by any other apps #B (e.g. Python running pytest).
     """
-
-    def _get_authorization_code(consent_url: str) -> str:
-        return get_outlook365_authorization_code_url(consent_url)
-
     if configuration.calendar_type is CalendarType.Outlook365:
-        testing_overrides = Outlook365TestingOverrides(
-            handle_consent_callback=_get_authorization_code,
-            namespace="ci-runner",
-            client_id=OUTLOOK365_TEST_CLIENT_ID,
-            calendar_name="Calendar"
-        )
-        adapter = Outlook365CalendarAdapter(configuration=configuration, testing_overrides=testing_overrides)
-        adapter.authenticate()
+        adapter = Outlook365TestingCalendarAdapter(configuration)
+
     elif configuration.calendar_type is CalendarType.CalDAV:
-        test_credentials = CalDavTestCredentials.read_from_env()
-
-        def get_creds():
-            return test_credentials.username, test_credentials.password
-
-        testing_overrides = CaldavTestingOverrides(
-            credentials_callback=get_creds,
-            server_url=test_credentials.calendar_url,
-            namespace="ci-runner",
-            calendar_url=test_credentials.calendar_url
-        )
-        adapter = CaldavCalendarAdapter(configuration=configuration, testing_overrides=testing_overrides)
-        adapter.authenticate()
+        adapter = CaldavTestingCalendarAdapter(configuration)
     else:
         raise NotImplementedError
 
+    adapter.authenticate()
     adapter.check_connection_and_credentials()
     return adapter

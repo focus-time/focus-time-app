@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 
 from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 
@@ -31,10 +31,11 @@ class AbstractCalendarAdapter(ABC):
         """
 
     @abstractmethod
-    def get_events(self, from_date: datetime, to_date: datetime) -> List[FocusTimeEvent]:
+    def get_events(self, date_range: Optional[tuple[datetime, datetime]] = None) -> list[FocusTimeEvent]:
         """
-        Retrieves all focus time calendar events with a start date >= 'from_date' and end date <= 'to_date',
-        sorted by ascending start time.
+        Retrieves all focus time calendar events, sorted by ascending start time. By default, the range is computed
+        from the Configuration object. Otherwise, a tuple of the start and end time is expected, and events with a
+        start date >= date_range[0] and end date <= date_range[1] are returned.
         """
 
     @abstractmethod

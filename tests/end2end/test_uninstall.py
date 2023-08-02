@@ -3,7 +3,7 @@ import time
 
 from focus_time_app.command_execution import CommandExecutorImpl
 from tests.conftest import ConfiguredCLI
-from tests.test_utils import run_cli_command_handle_output_error
+from tests.utils import run_cli_command_handle_output_error
 
 logger = logging.getLogger("TestUninstallSyncCommand")
 

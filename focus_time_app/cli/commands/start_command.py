@@ -3,9 +3,9 @@ from zoneinfo import ZoneInfo
 
 import typer
 
-from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
-from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop, get_active_focustime_event
 from focus_time_app.configuration.configuration import ConfigurationV1
+from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
+from focus_time_app.focus_time_calendar.utils import get_active_focustime_event
 
 
 class StartCommand:
@@ -16,8 +16,7 @@ class StartCommand:
         self._duration_in_minutes = duration_in_minutes
 
     def run(self):
-        from_date, to_date = compute_calendar_query_start_and_stop(self._configuration)
-        events = self._calendar_adapter.get_events(from_date, to_date)
+        events = self._calendar_adapter.get_events()
         if get_active_focustime_event(events):
             typer.echo("Cannot create a new focus time event because there is already one active")
             raise typer.Exit(code=1)

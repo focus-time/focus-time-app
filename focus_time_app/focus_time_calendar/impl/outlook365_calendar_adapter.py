@@ -1,7 +1,6 @@
 import os
-from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Tuple, Callable
+from typing import List, Optional, Dict, Any, Tuple
 
 import marshmallow_dataclass
 import pytz
@@ -14,56 +13,30 @@ from focus_time_app.configuration.configuration import ConfigurationV1, Outlook3
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 from focus_time_app.focus_time_calendar.impl.outlook365_keyring_backend import Outlook365KeyringBackend
+from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop
 from focus_time_app.utils import CI_ENV_VAR_NAME
 
 OUTLOOK365_REDIRECT_URL = "https://focus-time.github.io/focus-time-app"
-
-
-@dataclass
-class Outlook365TestingOverrides:
-    handle_consent_callback: Callable[[str], str]
-    namespace: str
-    client_id: str
-    calendar_name: str
-
-
-def consent_input_token(consent_url: str):
-    typer.echo("Visit the following url to grant the Focus Time app access to your personal Outlook 365 calendars:")
-    typer.echo(consent_url)
-    if os.getenv(CI_ENV_VAR_NAME, None) is None:
-        typer.launch(consent_url)
-    typer.echo("After you logged into your Microsoft account and granted consent, your browser should have redirected "
-               "you to a web page that shows the code that you need to paste here")
-    return typer.prompt("On the page, please click the 'Copy' button, then "
-                        "paste the clipboard content here, then press Enter",
-                        prompt_suffix='\n')
-
 
 outlook_configuration_v1_schema = marshmallow_dataclass.class_schema(Outlook365ConfigurationV1)()
 
 
 class Outlook365CalendarAdapter(AbstractCalendarAdapter):
 
-    def __init__(self, configuration: ConfigurationV1, testing_overrides: Optional[Outlook365TestingOverrides] = None):
+    def __init__(self, configuration: ConfigurationV1, environment_namespace_override: Optional[str] = None):
         self._configuration = configuration
-        self._testing_overrides = testing_overrides
         self._outlook_configuration: Optional[Outlook365ConfigurationV1] = None
         if configuration.adapter_configuration is not None:
             self._outlook_configuration: Outlook365ConfigurationV1 = outlook_configuration_v1_schema.load(
                 configuration.adapter_configuration)
         self._account: Optional[Account] = None
-        namespace_override = None if testing_overrides is None else testing_overrides.namespace
-        self._backend = Outlook365KeyringBackend(namespace_override)
+        self._backend = Outlook365KeyringBackend(environment_namespace_override)
 
     def authenticate(self) -> Optional[Dict[str, Any]]:
-        client_id_override = None if self._testing_overrides is None else self._testing_overrides.client_id
-        client_id: str = client_id_override or \
-                         typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
+        client_id = self._get_client_id()
         self._account = Account(client_id, auth_flow_type="public", token_backend=self._backend)
-        handle_consent_callback = consent_input_token if self._testing_overrides is None \
-            else self._testing_overrides.handle_consent_callback
-        if self._account.authenticate(scopes=["basic", "calendar_all"],
-                                      handle_consent=handle_consent_callback, redirect_uri=OUTLOOK365_REDIRECT_URL):
+        if self._account.authenticate(scopes=["basic", "calendar_all"], handle_consent=self._get_consent_callback,
+                                      redirect_uri=OUTLOOK365_REDIRECT_URL):
             typer.echo("Retrieving the list of calendars ...")
             schedule: Schedule = self._account.schedule()
             calendars = schedule.list_calendars()
@@ -74,13 +47,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
                 calendar_name = calendars[0].name
                 typer.echo(f"Found only one calendar named '{calendar_name}', which will be chosen")
             else:
-                if self._testing_overrides is not None:
-                    calendar_name = self._testing_overrides.calendar_name
-                else:
-                    calendar_names = [calendar.name for calendar in calendars]
-                    name_choice = Choice(calendar_names)
-                    calendar_name = typer.prompt("Please provide the name of your calendar", type=name_choice,
-                                                 prompt_suffix='\n')
+                calendar_name = self._get_calendar_name(calendars)
 
             self._outlook_configuration = Outlook365ConfigurationV1(client_id=client_id, calendar_name=calendar_name)
             return outlook_configuration_v1_schema.dump(self._outlook_configuration)
@@ -100,8 +67,13 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         schedule: Schedule = self._account.schedule()
         schedule.list_calendars()
 
-    def get_events(self, from_date: datetime, to_date: datetime) -> List[FocusTimeEvent]:
+    def get_events(self, date_range: Optional[tuple[datetime, datetime]] = None) -> list[FocusTimeEvent]:
         schedule, calendar = self._get_schedule_and_calendar()
+        if date_range:
+            from_date, to_date = date_range
+        else:
+            from_date, to_date = compute_calendar_query_start_and_stop(self._configuration)
+
         q = calendar.new_query("start").greater_equal(from_date).order_by("start", ascending=True)
         q.chain("and").on_attribute("end").less_equal(to_date)
         q.chain("and").on_attribute("subject").equals(self._configuration.focustime_event_name)
@@ -175,3 +147,24 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         schedule: Schedule = self._account.schedule()
         calendar = schedule.get_calendar(calendar_name=self._outlook_configuration.calendar_name)
         return schedule, calendar
+
+    def _get_client_id(self) -> str:
+        return typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
+
+    def _get_consent_callback(self, consent_url: str) -> str:
+        typer.echo("Visit the following url to grant the Focus Time app access to your personal Outlook 365 calendars:")
+        typer.echo(consent_url)
+        if os.getenv(CI_ENV_VAR_NAME, None) is None:
+            typer.launch(consent_url)
+        typer.echo(
+            "After you logged into your Microsoft account and granted consent, your browser should have redirected "
+            "you to a web page that shows the code that you need to paste here")
+        return typer.prompt("On the page, please click the 'Copy' button, then "
+                            "paste the clipboard content here, then press Enter",
+                            prompt_suffix='\n')
+
+    def _get_calendar_name(self, calendars: list[Calendar]) -> str:
+        calendar_names = [calendar.name for calendar in calendars]
+        name_choice = Choice(calendar_names)
+        return typer.prompt("Please provide the name of your calendar", type=name_choice,
+                            prompt_suffix='\n')
