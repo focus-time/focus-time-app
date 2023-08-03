@@ -109,6 +109,8 @@ class TestCalendar:
         assert events[0].start == from_date2
         assert events[0].end == to_date2
 
+        created_event1.start = from_date2
+        created_event1.end = to_date2
         configured_calendar_adapter.update_event(event=created_event1, reminder_in_minutes=0)
         events = configured_calendar_adapter.get_events()
         assert len(events) == 1
