@@ -7,7 +7,7 @@ from focus_time_app.configuration.configuration import ConfigurationV1
 from focus_time_app.configuration.persistence import Persistence
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import FocusTimeEvent
-from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop, get_active_focustime_event
+from focus_time_app.focus_time_calendar.utils import get_active_focustime_event
 
 
 class SyncCommand:
@@ -17,8 +17,7 @@ class SyncCommand:
         self._logger = logging.getLogger(type(self).__name__)
 
     def run(self):
-        from_date, to_date = compute_calendar_query_start_and_stop(self._configuration)
-        events = self._calendar_adapter.get_events(from_date, to_date)
+        events = self._calendar_adapter.get_events()
         self._adjust_reminder_time_if_necessary(events)
         marker_file_exists = Persistence.ongoing_focustime_markerfile_exists()
         if get_active_focustime_event(events):

@@ -41,7 +41,7 @@ class Persistence:
         if ongoing:
             Persistence._get_marker_file_path().touch()
         else:
-            Persistence._get_marker_file_path().unlink()
+            Persistence._get_marker_file_path().unlink(missing_ok=True)
 
     @staticmethod
     def get_storage_directory() -> Path:

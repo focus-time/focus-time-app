@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from focus_time_app.command_execution import CommandExecutorImpl
 from tests.conftest import ConfiguredCLI
-from tests.test_utils import run_cli_command_handle_output_error
+from tests.utils import run_cli_command_handle_output_error
 
 logger = logging.getLogger("TestCLIStartStopCommand")
 
@@ -14,8 +14,7 @@ class TestCLIStartStopCommand:
     """
     Tests the "start" and "stop" CLI commands.
 
-    Note: you should set the environment variable defined in CI_ENV_VAR_NAME and
-    USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME to any value when running pytest.
+    Note: you should set the environment variable defined in CI_ENV_VAR_NAME to any value when running pytest.
     """
     DATE_COMPARISON_FUZZY_DELTA = timedelta(seconds=10)
 
@@ -39,8 +38,8 @@ class TestCLIStartStopCommand:
 
         # Verify that the created focus time blocker event has the expected start and stop time
         now_at_start = datetime.now(ZoneInfo('UTC'))
-        events = calendar_adapter.get_events(from_date=now_at_start - timedelta(minutes=1),
-                                             to_date=now_at_start + timedelta(minutes=5))
+        events = calendar_adapter.get_events((now_at_start - timedelta(minutes=1),
+                                              now_at_start + timedelta(minutes=5)))
         assert len(events) == 1
         self._assert_date_approx_equal(actual=events[0].start, expected=now_at_start)
         self._assert_date_approx_equal(actual=events[0].end,
@@ -65,8 +64,8 @@ class TestCLIStartStopCommand:
 
         # Verify that the event has been shortened
         now_at_stop = datetime.now(ZoneInfo('UTC'))
-        events_after_stop = calendar_adapter.get_events(from_date=now_at_start - timedelta(minutes=5),
-                                                        to_date=now_at_start + timedelta(minutes=5))
+        events_after_stop = calendar_adapter.get_events((now_at_start - timedelta(minutes=5),
+                                                         now_at_start + timedelta(minutes=5)))
         assert len(events_after_stop) == 1
         self._assert_date_approx_equal(actual=events_after_stop[0].start, expected=now_at_start)
         self._assert_date_approx_equal(actual=events_after_stop[0].end, expected=now_at_stop)

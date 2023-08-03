@@ -3,7 +3,7 @@ import time
 
 from focus_time_app.command_execution import CommandExecutorImpl
 from tests.conftest import ConfiguredCLI
-from tests.test_utils import run_cli_command_handle_output_error
+from tests.utils import run_cli_command_handle_output_error
 
 logger = logging.getLogger("TestUninstallSyncCommand")
 
@@ -12,8 +12,7 @@ class TestUninstallSyncCommand:
     """
     Tests the "uninstall" CLI command.
 
-    Note: you should set the environment variable defined in CI_ENV_VAR_NAME and
-    USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME to any value when running pytest.
+    Note: you should set the environment variable defined in CI_ENV_VAR_NAME to any value when running pytest.
     """
 
     def test_uninstall(self, configured_cli_with_bg_jobs: ConfiguredCLI):

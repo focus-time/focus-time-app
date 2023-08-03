@@ -8,7 +8,7 @@ import pytest
 from focus_time_app.command_execution import CommandExecutorImpl
 from focus_time_app.focus_time_calendar.event import CalendarType
 from tests.conftest import ConfiguredCLI
-from tests.test_utils import run_cli_command_handle_output_error
+from tests.utils import run_cli_command_handle_output_error
 
 logger = logging.getLogger("TestCLISyncCommand")
 
@@ -17,8 +17,7 @@ class TestCLISyncCommand:
     """
     Tests the "sync" CLI command.
 
-    Note: you should set the environment variable defined in CI_ENV_VAR_NAME and
-    USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME to any value when running pytest.
+    Note: you should set the environment variable defined in CI_ENV_VAR_NAME to any value when running pytest.
     """
 
     def test_manual_on_off_sync(self, configured_cli_no_bg_jobs: ConfiguredCLI):
@@ -138,8 +137,8 @@ class TestCLISyncCommand:
             configured_cli_no_bg_jobs.configuration.event_reminder_time_minutes = old_event_reminder_time_minutes
 
         # Verify that the event reminder is not set
-        events = configured_cli_no_bg_jobs.calendar_adapter.get_events(from_date=now - timedelta(minutes=1),
-                                                                       to_date=now + timedelta(minutes=2))
+        events = configured_cli_no_bg_jobs.calendar_adapter.get_events((now - timedelta(minutes=1),
+                                                                        now + timedelta(minutes=2)))
         assert len(events) == 1
         assert events[0].reminder_in_minutes == new_event_reminder_time_minutes
 
@@ -147,7 +146,7 @@ class TestCLISyncCommand:
         assert run_cli_command_handle_output_error("sync").startswith(
             "Found a new focus time, calling start command(s) ...")
 
-        events = configured_cli_no_bg_jobs.calendar_adapter.get_events(from_date=now - timedelta(minutes=1),
-                                                                       to_date=now + timedelta(minutes=2))
+        events = configured_cli_no_bg_jobs.calendar_adapter.get_events((now - timedelta(minutes=1),
+                                                                        now + timedelta(minutes=2)))
         assert len(events) == 1
         assert events[0].reminder_in_minutes == configured_cli_no_bg_jobs.configuration.event_reminder_time_minutes

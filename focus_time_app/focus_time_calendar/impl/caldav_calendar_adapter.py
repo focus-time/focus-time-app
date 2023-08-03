@@ -1,7 +1,6 @@
 import os
-from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any, Callable
+from typing import Optional, List, Dict, Any
 
 import caldav
 import icalendar
@@ -14,16 +13,8 @@ from focus_time_app.configuration.configuration import ConfigurationV1, CaldavCo
 from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
 from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 from focus_time_app.focus_time_calendar.impl.keyring_credentials_store import KeyringCredentialsStore
-from focus_time_app.utils import USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME
-
-
-@dataclass
-class CaldavTestingOverrides:
-    credentials_callback: Callable[[], tuple[str, str]]
-    server_url: str
-    namespace: str
-    calendar_url: str
-
+from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop
+from focus_time_app.utils import CI_ENV_VAR_NAME
 
 caldav_configuration_v1_schema = marshmallow_dataclass.class_schema(CaldavConfigurationV1)()
 
@@ -34,9 +25,8 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
     """
     _CREDENTIALS_SEPARATOR = "||"
 
-    def __init__(self, configuration: ConfigurationV1, testing_overrides: Optional[CaldavTestingOverrides] = None):
+    def __init__(self, configuration: ConfigurationV1, environment_namespace_override: Optional[str] = None):
         self._configuration = configuration
-        self._testing_overrides = testing_overrides
         self._caldav_configuration: Optional[CaldavConfigurationV1] = None
         if configuration.adapter_configuration is not None:
             self._caldav_configuration: CaldavConfigurationV1 = caldav_configuration_v1_schema.load(
@@ -44,16 +34,11 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
         self._username = ""
         self._password = ""
         self._caldav_calendar: Optional[caldav.Calendar] = None
-        namespace_override = None if testing_overrides is None else testing_overrides.namespace
-        self._credentials_store = KeyringCredentialsStore(namespace_override=namespace_override)
+        self._credentials_store = KeyringCredentialsStore(namespace_override=environment_namespace_override)
 
     def authenticate(self) -> Optional[Dict[str, Any]]:
-        server_url_override = None if self._testing_overrides is None else self._testing_overrides.server_url
-        server_url: str = server_url_override or \
-                          typer.prompt("Provide the CalDAV URL", prompt_suffix='\n')
-        credentials_callback = self._testing_overrides.credentials_callback if self._testing_overrides is not None \
-            else self._get_credentials_input
-        self._username, self._password = credentials_callback()
+        server_url = self._get_server_url()
+        self._username, self._password = self._get_credentials()
 
         client = caldav.DAVClient(url=server_url, username=self._username, password=self._password)
         try:
@@ -67,15 +52,8 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
                 calendar_url = str(calendars[0].url)
                 self._caldav_calendar = calendars[0]
             else:
-                if self._testing_overrides is not None:
-                    calendar_url = self._testing_overrides.calendar_url
-                else:
-                    calendar_names = [calendar.name for calendar in calendars]
-                    name_choice = Choice(calendar_names)
-                    calendar_name = typer.prompt("Please provide the name of your calendar", type=name_choice,
-                                                 prompt_suffix='\n')
-                    calendar_url = [str(c.url) for c in calendars if c.name == calendar_name][0]
-                    self._caldav_calendar = [c for c in calendars if c.name == calendar_name][0]
+                self._caldav_calendar = self._get_calendar(calendars)
+                calendar_url = str(self._caldav_calendar.url)
 
             self._save_credentials()
             self._caldav_configuration = CaldavConfigurationV1(calendar_url=calendar_url)
@@ -97,7 +75,12 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
         self._caldav_calendar = principal.calendar(cal_url=self._caldav_configuration.calendar_url)
         self._caldav_calendar.get_supported_components()  # verifies the calendar URL
 
-    def get_events(self, from_date: datetime, to_date: datetime) -> List[FocusTimeEvent]:
+    def get_events(self, date_range: Optional[tuple[datetime, datetime]] = None) -> list[FocusTimeEvent]:
+        if date_range:
+            from_date, to_date = date_range
+        else:
+            from_date, to_date = compute_calendar_query_start_and_stop(self._configuration)
+
         caldav_events = self._caldav_calendar.search(start=from_date, end=to_date, event=True, expand=True,
                                                      sort_keys=("dtstart",))
         events_filtered = [e for e in caldav_events if
@@ -116,7 +99,8 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
 
         reminder_in_minutes = 0
         if self._configuration.set_event_reminder and self._configuration.event_reminder_time_minutes > 0:
-            self._add_reminder_to_event_and_save(event)
+            self._add_reminder_to_event_and_save(event,
+                                                 reminder_time_minutes=self._configuration.event_reminder_time_minutes)
             reminder_in_minutes = self._configuration.event_reminder_time_minutes
 
         return FocusTimeEvent(id=event.icalendar_component["uid"], start=from_date, end=to_date,
@@ -133,7 +117,7 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
         if reminder_in_minutes is not None:
             self._remove_all_reminders_and_save(caldav_event)
             if reminder_in_minutes > 0:
-                self._add_reminder_to_event_and_save(caldav_event)
+                self._add_reminder_to_event_and_save(caldav_event, reminder_time_minutes=reminder_in_minutes)
 
         caldav_event.save()
 
@@ -141,16 +125,25 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
         caldav_event = self._caldav_calendar.event_by_uid(event.id)
         caldav_event.delete()
 
-    @staticmethod
-    def _get_credentials_input() -> tuple[str, str]:
+    def _get_server_url(self) -> str:
+        return typer.prompt("Provide the CalDAV URL", prompt_suffix='\n')
+
+    def _get_credentials(self) -> tuple[str, str]:
         username = typer.prompt("Please provide your username", prompt_suffix='\n')
-        if os.getenv(USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME, None) is not None:
+        if os.getenv(CI_ENV_VAR_NAME, None) is not None:
             # In automated tests, writing to the CLI's "stdin" won't work when using secure password prompt methods
             # (such as pwinput() or getpass()), thus we use normal (insecure) input-reading instead
-            password = typer.prompt("Please provide your password", prompt_suffix='\n')
+            password = typer.prompt("Please provide your password (CI mode, shown on screen!)", prompt_suffix='\n')
         else:
             password = pwinput.pwinput("Please provide your password:\n")
         return username, password
+
+    def _get_calendar(self, calendars: list[caldav.Calendar]) -> caldav.Calendar:
+        calendar_names = [calendar.name for calendar in calendars]
+        name_choice = Choice(calendar_names)
+        calendar_name = typer.prompt("Please provide the name of your calendar", type=name_choice,
+                                     prompt_suffix='\n')
+        return [c for c in calendars if c.name == calendar_name][0]
 
     def _save_credentials(self):
         try:
@@ -187,10 +180,10 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
         return FocusTimeEvent(id=e.icalendar_component["uid"], start=e.icalendar_component["dtstart"].dt,
                               end=e.icalendar_component["dtend"].dt, reminder_in_minutes=reminder_minutes)
 
-    def _add_reminder_to_event_and_save(self, event: caldav.CalendarObjectResource):
+    def _add_reminder_to_event_and_save(self, event: caldav.CalendarObjectResource, reminder_time_minutes: int):
         ia = icalendar.Alarm()
         ia.add("action", "DISPLAY")
-        ia.add("trigger", timedelta(minutes=-1 * self._configuration.event_reminder_time_minutes))
+        ia.add("trigger", timedelta(minutes=-1 * reminder_time_minutes))
         event.icalendar_component.add_component(ia)
         event.save()
 

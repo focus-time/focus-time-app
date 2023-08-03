@@ -1,4 +1,5 @@
 import logging
+import sys
 from datetime import datetime, timedelta
 from typing import Tuple
 from zoneinfo import ZoneInfo
@@ -7,21 +8,21 @@ import caldav
 import icalendar
 import pytest
 
-from tests import CalDavTestCredentials
+from tests import CalDavTestCredentials, now_without_micros
 
 logger = logging.getLogger("TestCalDavClient")
 
 
 @pytest.fixture
 def caldav_calendar() -> caldav.Calendar:
-    test_credentials = CalDavTestCredentials.read_from_env()
+    test_credentials = CalDavTestCredentials.read_from_env(use_dedicated_unit_test_calendar=True)
     with caldav.DAVClient(url=test_credentials.calendar_url, username=test_credentials.username,
                           password=test_credentials.password) as client:
         client.propfind()
         my_principal = client.principal()
         calendars = my_principal.calendars()
         assert len(calendars) > 0
-        calendar = calendars[0]
+        calendar = [c for c in calendars if str(c.url) == test_credentials.calendar_url][0]
 
         events = calendar.search(start=datetime.now(ZoneInfo('UTC')) - timedelta(days=1),
                                  end=datetime.now(ZoneInfo('UTC')) + timedelta(days=1), event=True, expand=True)
@@ -29,13 +30,6 @@ def caldav_calendar() -> caldav.Calendar:
             event.delete()
 
         yield calendar
-
-
-def now_without_micros() -> datetime:
-    now = datetime.now(ZoneInfo('UTC'))
-    if now.microsecond:
-        now = now - timedelta(microseconds=now.microsecond)
-    return now
 
 
 def get_typical_search_time_window() -> Tuple[datetime, datetime]:
@@ -49,6 +43,8 @@ def get_typical_search_time_window() -> Tuple[datetime, datetime]:
     return start, end
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="Avoid problematic interferences when running multiple "
+                                                     "instances of this test in parallel in CI")
 class TestCalDavClient:
     """
     Tests various features of the CalDAV Python library

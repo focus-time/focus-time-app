@@ -3,9 +3,9 @@ from zoneinfo import ZoneInfo
 
 import typer
 
-from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
-from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop, get_active_focustime_event
 from focus_time_app.configuration.configuration import ConfigurationV1
+from focus_time_app.focus_time_calendar.abstract_calendar_adapter import AbstractCalendarAdapter
+from focus_time_app.focus_time_calendar.utils import get_active_focustime_event
 
 
 class StopCommand:
@@ -14,8 +14,7 @@ class StopCommand:
         self._configuration = configuration
 
     def run(self):
-        from_date, to_date = compute_calendar_query_start_and_stop(self._configuration)
-        events = self._calendar_adapter.get_events(from_date, to_date)
+        events = self._calendar_adapter.get_events()
         active_focustime_event = get_active_focustime_event(events)
         if not active_focustime_event:
             typer.echo("There is no ongoing focus time event, therefore the focus time cannot be stopped")
