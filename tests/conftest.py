@@ -236,7 +236,9 @@ def configure_caldav_calendar_adapter(config_process: Popen, config: Configurati
     write_line_to_stream(config_process.stdin, test_credentials.username)
     out = config_process.stdout.readline()  # asks for password
     write_line_to_stream(config_process.stdin, test_credentials.password)
-    out = config_process.stdout.readline()  # prints info about finding only one calendar, which is automatically used
+    out = config_process.stdout.readline()  # prints "Please provide the name of your calendar (unittests, Personal)"
+    assert "Please provide the name of your calendar" in out
+    write_line_to_stream(config_process.stdin, "Personal")
 
     caldav_configuration_v1_schema = marshmallow_dataclass.class_schema(CaldavConfigurationV1)()
     config.adapter_configuration = caldav_configuration_v1_schema.dump(adapter_configuration)

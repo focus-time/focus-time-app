@@ -14,8 +14,7 @@ class TestCLIStartStopCommand:
     """
     Tests the "start" and "stop" CLI commands.
 
-    Note: you should set the environment variable defined in CI_ENV_VAR_NAME and
-    USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME to any value when running pytest.
+    Note: you should set the environment variable defined in CI_ENV_VAR_NAME to any value when running pytest.
     """
     DATE_COMPARISON_FUZZY_DELTA = timedelta(seconds=10)
 

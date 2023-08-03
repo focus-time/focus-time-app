@@ -14,7 +14,7 @@ from focus_time_app.focus_time_calendar.abstract_calendar_adapter import Abstrac
 from focus_time_app.focus_time_calendar.event import FocusTimeEvent
 from focus_time_app.focus_time_calendar.impl.keyring_credentials_store import KeyringCredentialsStore
 from focus_time_app.focus_time_calendar.utils import compute_calendar_query_start_and_stop
-from focus_time_app.utils import USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME
+from focus_time_app.utils import CI_ENV_VAR_NAME
 
 caldav_configuration_v1_schema = marshmallow_dataclass.class_schema(CaldavConfigurationV1)()
 
@@ -130,10 +130,10 @@ class CaldavCalendarAdapter(AbstractCalendarAdapter):
 
     def _get_credentials(self) -> tuple[str, str]:
         username = typer.prompt("Please provide your username", prompt_suffix='\n')
-        if os.getenv(USE_INSECURE_PASSWORD_PROMPT_ENV_VAR_NAME, None) is not None:
+        if os.getenv(CI_ENV_VAR_NAME, None) is not None:
             # In automated tests, writing to the CLI's "stdin" won't work when using secure password prompt methods
             # (such as pwinput() or getpass()), thus we use normal (insecure) input-reading instead
-            password = typer.prompt("Please provide your password", prompt_suffix='\n')
+            password = typer.prompt("Please provide your password (CI mode, shown on screen!)", prompt_suffix='\n')
         else:
             password = pwinput.pwinput("Please provide your password:\n")
         return username, password
