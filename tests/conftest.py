@@ -14,6 +14,7 @@ from focus_time_app.command_execution.abstract_command_executor import CommandEx
 from focus_time_app.configuration.configuration import ConfigurationV1, Outlook365ConfigurationV1, CaldavConfigurationV1
 from focus_time_app.configuration.persistence import Persistence
 from focus_time_app.focus_time_calendar.event import CalendarType
+from focus_time_app.focus_time_calendar.impl.outlook365_calendar_adapter import OUTLOOK365_OAUTH_COMMON_TENANT
 from tests import CalDavTestCredentials, OUTLOOK365_TEST_CLIENT_ID
 from tests.utils import get_random_event_name_postfix, get_frozen_binary_path
 from tests.utils.abstract_testing_calendar_adapter import AbstractTestingCalendarAdapter
@@ -202,11 +203,15 @@ def configure_outlook365_calendar_adapter(config_process: Popen, config: Configu
     Requires the environment variables OUTLOOK365_EMAIL and OUTLOOK365_PASSWORD to be set for the corresponding
     Microsoft 365 account (whose owner must already have granted permission to the Client ID used below).
     """
-    adapter_configuration = Outlook365ConfigurationV1(client_id=OUTLOOK365_TEST_CLIENT_ID, calendar_name="Calendar")
+    adapter_configuration = Outlook365ConfigurationV1(client_id=OUTLOOK365_TEST_CLIENT_ID,
+                                                      tenant_id=OUTLOOK365_OAUTH_COMMON_TENANT,
+                                                      calendar_name="Calendar")
 
     write_line_to_stream(config_process.stdin, "1")  # Use Outlook
     out = config_process.stdout.readline()  # asks for Client ID
     write_line_to_stream(config_process.stdin, adapter_configuration.client_id)
+    out = config_process.stdout.readline()  # asks user whether they want to set a tenant ID
+    write_line_to_stream(config_process.stdin, "n")
     out = config_process.stdout.readline()  # asks user to visit URL
     url = config_process.stdout.readline()  # contains the actual URL
     assert url.startswith("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?response_type=code")
