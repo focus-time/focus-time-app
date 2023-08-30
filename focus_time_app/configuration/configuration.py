@@ -14,6 +14,7 @@ UUID = NewType("UUID", str, field=marshmallow.fields.UUID)
 @dataclass
 class Outlook365ConfigurationV1:
     client_id: UUID
+    tenant_id: Optional[UUID]
     calendar_name: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
 
 

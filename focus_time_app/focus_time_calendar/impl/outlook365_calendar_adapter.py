@@ -17,6 +17,7 @@ from focus_time_app.focus_time_calendar.utils import compute_calendar_query_star
 from focus_time_app.utils import CI_ENV_VAR_NAME
 
 OUTLOOK365_REDIRECT_URL = "https://focus-time.github.io/focus-time-app"
+OUTLOOK365_OAUTH_COMMON_TENANT = "common"
 
 outlook_configuration_v1_schema = marshmallow_dataclass.class_schema(Outlook365ConfigurationV1)()
 
@@ -34,7 +35,9 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
 
     def authenticate(self) -> Optional[Dict[str, Any]]:
         client_id = self._get_client_id()
-        self._account = Account(client_id, auth_flow_type="public", token_backend=self._backend)
+        tenant_id = self._get_tenant_id()
+        self._account = Account(client_id, auth_flow_type="public", token_backend=self._backend,
+                                tenant_id=tenant_id or OUTLOOK365_OAUTH_COMMON_TENANT)
         if self._account.authenticate(scopes=["basic", "calendar_all"], handle_consent=self._get_consent_callback,
                                       redirect_uri=OUTLOOK365_REDIRECT_URL):
             typer.echo("Retrieving the list of calendars ...")
@@ -49,7 +52,8 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
             else:
                 calendar_name = self._get_calendar_name(calendars)
 
-            self._outlook_configuration = Outlook365ConfigurationV1(client_id=client_id, calendar_name=calendar_name)
+            self._outlook_configuration = Outlook365ConfigurationV1(client_id=client_id, tenant_id=tenant_id,
+                                                                    calendar_name=calendar_name)
             return outlook_configuration_v1_schema.dump(self._outlook_configuration)
         else:
             return None
@@ -61,7 +65,8 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         # https://pytz-deprecation-shim.readthedocs.io/en/latest/migration.html
         # The issue is known (https://github.com/O365/python-o365/issues/753) but unlikely to be fixed soon
         self._account = Account(str(self._outlook_configuration.client_id), auth_flow_type="public",
-                                token_backend=self._backend, timezone=pytz.UTC)
+                                token_backend=self._backend, timezone=pytz.UTC,
+                                tenant_id=self._outlook_configuration.tenant_id or OUTLOOK365_OAUTH_COMMON_TENANT)
         if not self._account.is_authenticated:
             raise RuntimeError("Unable to load auth token")
         schedule: Schedule = self._account.schedule()
@@ -150,6 +155,12 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
 
     def _get_client_id(self) -> str:
         return typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
+
+    def _get_tenant_id(self) -> Optional[str]:
+        if not typer.confirm("Does your Azure App registration belong to a custom tenant of which you know the ID?",
+                             default=False, prompt_suffix='\n'):
+            return None
+        return typer.prompt("Provide the tenant ID", prompt_suffix='\n')
 
     def _get_consent_callback(self, consent_url: str) -> str:
         typer.echo("Visit the following url to grant the Focus Time app access to your personal Outlook 365 calendars:")

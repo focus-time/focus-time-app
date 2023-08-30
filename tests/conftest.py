@@ -202,11 +202,14 @@ def configure_outlook365_calendar_adapter(config_process: Popen, config: Configu
     Requires the environment variables OUTLOOK365_EMAIL and OUTLOOK365_PASSWORD to be set for the corresponding
     Microsoft 365 account (whose owner must already have granted permission to the Client ID used below).
     """
-    adapter_configuration = Outlook365ConfigurationV1(client_id=OUTLOOK365_TEST_CLIENT_ID, calendar_name="Calendar")
+    adapter_configuration = Outlook365ConfigurationV1(client_id=OUTLOOK365_TEST_CLIENT_ID, tenant_id=None,
+                                                      calendar_name="Calendar")
 
     write_line_to_stream(config_process.stdin, "1")  # Use Outlook
     out = config_process.stdout.readline()  # asks for Client ID
     write_line_to_stream(config_process.stdin, adapter_configuration.client_id)
+    out = config_process.stdout.readline()  # asks user whether they want to set a tenant ID
+    write_line_to_stream(config_process.stdin, "n")
     out = config_process.stdout.readline()  # asks user to visit URL
     url = config_process.stdout.readline()  # contains the actual URL
     assert url.startswith("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?response_type=code")
