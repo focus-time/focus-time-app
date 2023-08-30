@@ -30,15 +30,14 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         if configuration.adapter_configuration is not None:
             self._outlook_configuration: Outlook365ConfigurationV1 = outlook_configuration_v1_schema.load(
                 configuration.adapter_configuration)
-            if self._outlook_configuration.tenant_id is None:
-                self._outlook_configuration.tenant_id = OUTLOOK365_OAUTH_COMMON_TENANT
         self._account: Optional[Account] = None
         self._backend = Outlook365KeyringBackend(environment_namespace_override)
 
     def authenticate(self) -> Optional[Dict[str, Any]]:
         client_id = self._get_client_id()
         tenant_id = self._get_tenant_id()
-        self._account = Account(client_id, auth_flow_type="public", token_backend=self._backend, tenant_id=tenant_id)
+        self._account = Account(client_id, auth_flow_type="public", token_backend=self._backend,
+                                tenant_id=tenant_id or OUTLOOK365_OAUTH_COMMON_TENANT)
         if self._account.authenticate(scopes=["basic", "calendar_all"], handle_consent=self._get_consent_callback,
                                       redirect_uri=OUTLOOK365_REDIRECT_URL):
             typer.echo("Retrieving the list of calendars ...")
@@ -67,7 +66,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         # The issue is known (https://github.com/O365/python-o365/issues/753) but unlikely to be fixed soon
         self._account = Account(str(self._outlook_configuration.client_id), auth_flow_type="public",
                                 token_backend=self._backend, timezone=pytz.UTC,
-                                tenant_id=self._outlook_configuration.tenant_id)
+                                tenant_id=self._outlook_configuration.tenant_id or OUTLOOK365_OAUTH_COMMON_TENANT)
         if not self._account.is_authenticated:
             raise RuntimeError("Unable to load auth token")
         schedule: Schedule = self._account.schedule()
@@ -157,10 +156,10 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
     def _get_client_id(self) -> str:
         return typer.prompt("Provide the Client ID of your Azure App registration", prompt_suffix='\n')
 
-    def _get_tenant_id(self) -> str:
+    def _get_tenant_id(self) -> Optional[str]:
         if not typer.confirm("Does your Azure App registration belong to a custom tenant of which you know the ID?",
                              default=False, prompt_suffix='\n'):
-            return OUTLOOK365_OAUTH_COMMON_TENANT
+            return None
         return typer.prompt("Provide the tenant ID", prompt_suffix='\n')
 
     def _get_consent_callback(self, consent_url: str) -> str:
