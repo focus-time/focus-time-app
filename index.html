@@ -14,14 +14,41 @@
 
         window.addEventListener('DOMContentLoaded', (event) => {
             var urlInput = document.getElementById("urlInput");
-            urlInput.value = window.location.href;
+            var searchParams = new URLSearchParams(window.location.search);
+
+            if (searchParams.has("code")) {
+                var code = searchParams.get("code");
+                urlInput.value = code;
+                urlInput.style.display = "inline";
+                document.getElementById("successMessage").style.display = "block";
+                document.getElementById("successDescription").style.display = "block";
+                document.getElementById("copyButton").style.display = "inline";
+            } else if (searchParams.has("error")) {
+                var error = searchParams.get("error");
+                var errorDescription = searchParams.get("error_description");
+                document.getElementById("errorMessage").style.display = "block";
+                document.getElementById("errorDescription").style.display = "block";
+                document.getElementById("errorDescription").innerText = error + ": " + errorDescription;
+            } else {
+                // If no code or error parameter is provided, show incorrect usage message
+                document.getElementById("incorrectUsageMessage").style.display = "block";
+                document.getElementById("incorrectUsageDescription").style.display = "block";
+            }
         });
     </script>
 </head>
 <body>
-<h1>Authentication successful</h1>
-<p>Please copy the following token back into the shell window.</p>
-<input type="text" id="urlInput" disabled>
-<button onclick="copyToClipboard()">Copy</button>
+
+<h1 id="successMessage" style="display: none;">Authentication successful</h1>
+<p id="successDescription" style="display: none;">Please copy the following token back into the shell window.</p>
+<input type="text" id="urlInput" disabled style="display: none;">
+<button id="copyButton" onclick="copyToClipboard()" style="display: none;">Copy</button>
+
+<h1 id="errorMessage" style="display: none;">The authentication was not successful</h1>
+<p id="errorDescription" style="display: none;"></p>
+
+<h1 id="incorrectUsageMessage" style="display: none;">Page opened incorrectly.</h1>
+<p id="incorrectUsageDescription" style="display: none;">Please provide valid query parameters (<code>?code</code> or <code>?error</code>).</p>
+
 </body>
 </html>
