@@ -179,6 +179,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         # pasted content, adding it here. This saves just enough characters to stay below the 1024 limit.
         if not pasted_code.startswith(OUTLOOK365_REDIRECT_URL):
             return OUTLOOK365_REDIRECT_URL + "/" + pasted_code
+        return pasted_code
 
     def _get_calendar_name(self, calendars: list[Calendar]) -> str:
         calendar_names = [calendar.name for calendar in calendars]
