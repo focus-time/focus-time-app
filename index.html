@@ -18,7 +18,7 @@
 
             if (searchParams.has("code")) {
                 var code = searchParams.get("code");
-                urlInput.value = code;
+                urlInput.value = window.location.search;
                 urlInput.style.display = "inline";
                 document.getElementById("successMessage").style.display = "block";
                 document.getElementById("successDescription").style.display = "block";
