@@ -170,9 +170,16 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         typer.echo(
             "After you logged into your Microsoft account and granted consent, your browser should have redirected "
             "you to a web page that shows the code that you need to paste here")
-        return typer.prompt("On the page, please click the 'Copy' button, then "
-                            "paste the clipboard content here, then press Enter",
-                            prompt_suffix='\n')
+        pasted_code: str = typer.prompt("On the page, please click the 'Copy' button, then "
+                                        "paste the clipboard content here, then press Enter", prompt_suffix='\n')
+
+        # On macOS, the Terminal only allows pasting content with up to 1024 characters. When the Azure app
+        # registration requires a tenant, the returned URL (that contains the OAuth authorization code) has 1046
+        # characters. We work around this problem by omitting the value of OUTLOOK365_REDIRECT_URL (43 chars) in the
+        # pasted content, adding it here. This saves just enough characters to stay below the 1024 limit.
+        if not pasted_code.startswith(OUTLOOK365_REDIRECT_URL):
+            return OUTLOOK365_REDIRECT_URL + "/" + pasted_code
+        return pasted_code
 
     def _get_calendar_name(self, calendars: list[Calendar]) -> str:
         calendar_names = [calendar.name for calendar in calendars]
