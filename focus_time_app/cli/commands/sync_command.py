@@ -56,6 +56,6 @@ class SyncCommand:
         for event in events:
             if configured_reminder_time != event.reminder_in_minutes:
                 self._logger.debug(f"Adjusting reminder time of existing focus time event "
-                                   f"(start={event.start}, end={event.end}) from {event.reminder_in_minutes}"
+                                   f"(start={event.start}, end={event.end}) from {event.reminder_in_minutes} "
                                    f"to {configured_reminder_time} minutes")
                 self._calendar_adapter.update_event(event, reminder_in_minutes=configured_reminder_time)
