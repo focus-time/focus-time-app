@@ -8,7 +8,7 @@ It saves you from having to _manually_ start or stop your operating system's "Do
 close/open programs, etc., whenever a focus
 time period begins or ends.
 
-For now, **only Outlook 365 and CalDAV calendars are supported**. CalDAV support is in an early stage and may still 
+For now, **only Outlook 365 and CalDAV calendars are supported**. CalDAV support is in an early stage and may still
 have several problems, depending on the calendar provider/server.
 
 ## Features
@@ -18,7 +18,10 @@ have several problems, depending on the calendar provider/server.
     - The title/subject of the focus time blocker events
     - The reminder (_off_, or _on_ and the number of minutes) of the focus time blocker events. This also overwrites
       the reminder of _existing_ events, which is useful if you did not create them yourself, but e.g. used Microsoft
-      Viva Insights)
+      Viva Insights. **NOTE: it is not recommended to use this feature for Outlook 365 calendars, because it is buggy:
+      the Outlook platform keeps resetting the reminders once you involve an Outlook _client_, and once per
+      minute, `focus-time` will set the reminder again, causing the Outlook client to show a reminder pop-up dialog
+      every minute**
     - List of shell commands to run when a focus time event starts or ends, including the special commands `dnd-start`
       or `dnd-stop` which control your operating system's Do-Not-Disturb / Focus mode
     - The Windows _focus assist_ profile to be used ("Priority only" or "Alarms only")
