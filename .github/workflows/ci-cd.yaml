@@ -28,7 +28,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: ./.github/actions/build-windows-dnd-helper
         if: matrix.os == 'windows-latest'
@@ -64,7 +64,7 @@ jobs:
     needs: [ ci ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download all releases
         uses: actions/download-artifact@v3
       # The download job creates a separate folder for every release, resulting in files such as
