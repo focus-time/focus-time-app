@@ -4,6 +4,7 @@ Helper script to install focus-time (or upgrade an existing installation).
 import json
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, Tuple
@@ -71,7 +72,7 @@ def set_existing_installation_path(installation_path: Path):
     CONFIG_FILE_PATH.write_text(str(installation_path))
 
 
-def install_or_upgrade_app(temp_archive_path: Path, installation_path: Path):
+def install_or_upgrade_app(temp_archive_path: Path, installation_path: Path, is_version_upgrade: bool = False):
     is_replace = False
     if installation_path.is_dir():
         # clean the existing contents
@@ -90,7 +91,18 @@ def install_or_upgrade_app(temp_archive_path: Path, installation_path: Path):
     urlcleanup()
 
     if is_replace:
-        print("Successfully replaced your focus-time installation")
+        print("Successfully replaced your focus-time installation.")
+        if is_version_upgrade:
+            input("Note: the calendar credentials are stored in a macOS Keychain. Keychain detects that the "
+                  "'focus-time' binary has changed (due to the version upgrade), and therefore rejects the new "
+                  "binary's request to read the credentials, for security reasons. "
+                  "Please press <enter> to run the 'sync' command, which will "
+                  "cause a macOS dialog to show up, asking you to grant 'focus-time' access to the keychain again. "
+                  "You will have to provide your password and then click 'Always allow'.")
+
+            focus_time_binary_path = installation_path / "focus-time"
+            output = subprocess.check_output([str(focus_time_binary_path), "sync"]).decode("utf-8")
+            print(f"Result of 'sync' command: {output}")
     else:
         print("Successfully installed focus-time")
 
@@ -106,7 +118,8 @@ if __name__ == '__main__':
         existing_version, existing_path = existing_installation
         if input(f"Found an existing version ({existing_version}) in '{existing_path}'. "
                  f"Do you want to overwrite it with a clean installation? If so, type 'y' or 'yes':\n") in ["y", "yes"]:
-            install_or_upgrade_app(temp_archive_path, existing_path)
+            install_or_upgrade_app(temp_archive_path, existing_path,
+                                   is_version_upgrade=latest_version != existing_version)
             sys.exit(0)
 
     installation_path = None
