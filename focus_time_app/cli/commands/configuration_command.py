@@ -146,10 +146,17 @@ class ConfigurationCommand:
 
     @staticmethod
     def _configure_event_reminders(configuration: ConfigurationV1):
-        configuration.set_event_reminder = \
-            typer.confirm("Do you want the Focus Time app to set a reminder for the focus time calendar events? "
-                          "The app will also overwrite the reminder setting for existing(!) focus time events that "
-                          "were not created by the app", default=True, prompt_suffix='\n')
+        prompt = "Do you want the Focus Time app to set a reminder for the focus time calendar events? The app will " \
+                 "also overwrite the reminder setting for existing(!) focus time events that " \
+                 "were not created by the app"
+        default_value = True
+
+        if configuration.calendar_type is CalendarType.Outlook365:
+            prompt += ". Note: for Outlook 365 calendars, this option should not be used, because Outlook clients " \
+                      "seem to reset the reminder, and you would get a pop-up dialog once per minute"
+            default_value = False
+
+        configuration.set_event_reminder = typer.confirm(prompt, default=default_value, prompt_suffix='\n')
 
         if configuration.set_event_reminder:
             while True:
