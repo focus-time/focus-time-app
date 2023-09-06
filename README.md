@@ -42,8 +42,8 @@ have several problems, depending on the calendar provider/server.
 
 ### macOS (12 and newer)
 
-- Open a Terminal window, then run the following
-  command: `curl -s https://raw.githubusercontent.com/focus-time/focus-time-app/main/macos-installer.py | /usr/bin/python3 -`
+- Open a Terminal window, then run the following command:
+  `/usr/bin/python3 -c "$(curl -fsSL https://raw.githubusercontent.com/focus-time/focus-time-app/main/macos-installer.py)"`
     - This script helps you choose an installation location, downloads the latest release and extracts it to the
       location. Using such a script avoids the _quarantine flag_ that you'd get when downloading the latest release with
       your web browser. That quarantine flag would make it impossible to run `focus-time`, because it is not signed or
