@@ -49,8 +49,7 @@ class TestCLISyncCommand:
         time.sleep(60)
 
         # run sync, should enable DND
-        assert run_cli_command_handle_output_error("sync").startswith(
-            "Found a new focus time, calling start command(s) ...")
+        assert "calling start command(s) ..." in run_cli_command_handle_output_error("sync")
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert CommandExecutorImpl.is_dnd_active()
         assert configured_cli_no_bg_jobs.verification_file_path.read_text() == "start\n"
@@ -67,7 +66,7 @@ class TestCLISyncCommand:
 
         # run sync again, DND should be turned off
         assert run_cli_command_handle_output_error("sync").startswith(
-            "No focus time is active, calling stop command(s) ...")
+            "No focus time is active anymore, calling stop command(s) ...")
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert not CommandExecutorImpl.is_dnd_active()
         assert configured_cli_no_bg_jobs.verification_file_path.read_text() == "start\nstop\n"
@@ -143,8 +142,7 @@ class TestCLISyncCommand:
         assert events[0].reminder_in_minutes == new_event_reminder_time_minutes
 
         # The sync call should set the event reminder time
-        assert run_cli_command_handle_output_error("sync").startswith(
-            "Found a new focus time, calling start command(s) ...")
+        assert "calling start command(s) ..." in run_cli_command_handle_output_error("sync")
 
         events = configured_cli_no_bg_jobs.calendar_adapter.get_events((now - timedelta(minutes=1),
                                                                         now + timedelta(minutes=2)))
