@@ -42,14 +42,15 @@ have several problems, depending on the calendar provider/server.
 
 ### macOS (12 and newer)
 
-- Head over to the [Releases](https://github.com/focus-time/focus-time-app/releases) page and download the latest
-  release for macOS
-- Since the application is not signed or notarized, you first have to remove the _quarantine flag_, e.g.
-  via `sudo xattr -r -d com.apple.quarantine focus-time-app-macos-vx.y.z.zip`
-- In Finder, double-click the downloaded zip archive to extract the application
-- Optional: move the extracted folder to a different location
-- Open a Terminal Window, navigate to the extracted folder, and call `./focus-time configure` to set up the Focus time
-  app
+- Open a Terminal window, then run the following command:
+  `/usr/bin/python3 -c "$(curl -fsSL https://raw.githubusercontent.com/focus-time/focus-time-app/main/macos-installer.py)"`
+    - This script helps you choose an installation location, downloads the latest release and extracts it to the
+      location. Using such a script avoids the _quarantine flag_ that you'd get when downloading the latest release with
+      your web browser. That quarantine flag would make it impossible to run `focus-time`, because it is not signed or
+      notarized.
+    - Note: you can also use this command to _update_ an existing installation to the latest version!
+- Open a Terminal Window, navigate to the installation location and call `./focus-time configure` to set up the Focus
+  time app
 
 ## Usage
 
