@@ -15,6 +15,7 @@ from focus_time_app.focus_time_calendar.abstract_calendar_adapter import Abstrac
 from focus_time_app.focus_time_calendar.adapter_factory import create_calendar_adapter
 from focus_time_app.focus_time_calendar.event import CalendarType
 from focus_time_app.utils import is_production_environment
+from focus_time_app.utils.os_notification import OsNativeNotificationImpl
 
 
 class ConfigurationCommand:
@@ -53,7 +54,8 @@ class ConfigurationCommand:
         configuration = ConfigurationV1(calendar_type=calendar_type, calendar_look_ahead_hours=0,
                                         calendar_look_back_hours=0, focustime_event_name="Foo", start_commands=[],
                                         stop_commands=[], dnd_profile_name="foo",
-                                        set_event_reminder=False, event_reminder_time_minutes=0)
+                                        set_event_reminder=False, event_reminder_time_minutes=0,
+                                        show_notification=False)
         calendar_adapter = create_calendar_adapter(configuration)
         while True:
             adapter_configuration = calendar_adapter.authenticate()
@@ -73,6 +75,8 @@ class ConfigurationCommand:
         self._configure_start_and_stop_commands(configuration)
 
         self._configure_event_reminders(configuration)
+
+        self._configure_notification(configuration)
 
         if not self._skip_install_dnd_helper:
             CommandExecutorImpl.install_dnd_helpers()
@@ -165,3 +169,16 @@ class ConfigurationCommand:
                                  "reminder be shown?", type=int, default=15, prompt_suffix='\n')
                 if configuration.event_reminder_time_minutes > 0:
                     break
+
+    @staticmethod
+    def _configure_notification(configuration: ConfigurationV1):
+        prompt_message = "Do you want the Focus Time app to show a system notification whenever a focus time " \
+                         "starts or stops? If you choose yes, a test notification will be shown."
+        if sys.platform == "darwin":
+            prompt_message += " If you configure this app for the first time, macOS will request from you to allow " \
+                              "notifications (see top right corner of your screen)."
+
+        configuration.show_notification = typer.confirm(prompt_message, default=True, prompt_suffix='\n')
+
+        if configuration.show_notification:
+            OsNativeNotificationImpl.send_notification("Focus Time App test", "This is a dummy notification")

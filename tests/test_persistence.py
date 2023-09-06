@@ -18,7 +18,7 @@ class TestPersistence:
         config = ConfigurationV1(calendar_type=CalendarType.Outlook365, calendar_look_ahead_hours=3,
                                  calendar_look_back_hours=5, focustime_event_name="ft", start_commands=["start"],
                                  stop_commands=["stop"], dnd_profile_name="dnd", set_event_reminder=True,
-                                 event_reminder_time_minutes=15)
+                                 event_reminder_time_minutes=15, show_notification=False)
         Persistence.store_configuration(config)
 
         config_loaded = Persistence.load_configuration()

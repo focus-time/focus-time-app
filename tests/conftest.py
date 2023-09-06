@@ -46,8 +46,11 @@ def start_commands(tmp_path: Path) -> ConfiguredCommands:
         return ConfiguredCommands(commands=["dnd-start", f"echo start>> {verification_file_path}"],
                                   verification_file_path=verification_file_path)
     if sys.platform == "darwin":
-        return ConfiguredCommands(commands=[f"echo start >> {verification_file_path}"],
-                                  verification_file_path=verification_file_path)
+        commands = [f"echo start >> {verification_file_path}"]
+        if CommandExecutorImpl.is_dnd_helper_installed():
+            commands.insert(0, "dnd-start")
+
+        return ConfiguredCommands(commands=commands, verification_file_path=verification_file_path)
     raise NotImplementedError
 
 
@@ -63,8 +66,11 @@ def stop_commands(tmp_path: Path) -> ConfiguredCommands:
         return ConfiguredCommands(commands=["dnd-stop", f"echo stop>> {verification_file_path}"],
                                   verification_file_path=verification_file_path)
     elif sys.platform == "darwin":
-        return ConfiguredCommands(commands=[f"echo stop >> {verification_file_path}"],
-                                  verification_file_path=verification_file_path)
+        commands = [f"echo stop >> {verification_file_path}"]
+        if CommandExecutorImpl.is_dnd_helper_installed():
+            commands.insert(0, "dnd-stop")
+
+        return ConfiguredCommands(commands=commands, verification_file_path=verification_file_path)
     raise NotImplementedError
 
 
@@ -101,7 +107,7 @@ def configured_calendar_adapter(request, start_commands, stop_commands) -> Abstr
                              focustime_event_name=focustime_event_name,
                              start_commands=start_commands.commands, stop_commands=stop_commands.commands,
                              dnd_profile_name=dnd_profile_name, set_event_reminder=True,
-                             event_reminder_time_minutes=15)
+                             event_reminder_time_minutes=15, show_notification=False)
 
     return get_configured_calendar_adapter_for_testing(config)
 
@@ -121,7 +127,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
                              focustime_event_name=focustime_event_name,
                              start_commands=start_commands.commands, stop_commands=stop_commands.commands,
                              dnd_profile_name=dnd_profile_name, set_event_reminder=True,
-                             event_reminder_time_minutes=15)
+                             event_reminder_time_minutes=15, show_notification=True)
 
     Persistence.get_config_file_path().unlink(missing_ok=True)
 
@@ -166,6 +172,9 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
     if config.set_event_reminder:
         out = config_process.stdout.readline()  # asks for reminder minutes
         write_line_to_stream(config_process.stdin, config.event_reminder_time_minutes)
+
+    out = config_process.stdout.readline()  # asks whether to show a notification
+    write_line_to_stream(config_process.stdin, "y" if config.show_notification else "n")
 
     if sys.platform == "win32":
         out = config_process.stdout.readline()  # asks for name of Windows Focus Assist profile

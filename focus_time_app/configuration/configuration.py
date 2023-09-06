@@ -34,8 +34,9 @@ class ConfigurationV1:
     dnd_profile_name: str = field(metadata={"validate": marshmallow.validate.Length(min=1)})
     set_event_reminder: bool
     event_reminder_time_minutes: int = field(metadata={"validate": marshmallow.validate.Range(min=0)})
-    version: int = field(default=1)
+    show_notification: bool = field(default=False)
     adapter_configuration: Optional[Dict[str, Any]] = field(default=None)
+    version: int = field(default=1)
 
 
 ConfigurationV1Schema = marshmallow_dataclass.class_schema(ConfigurationV1)

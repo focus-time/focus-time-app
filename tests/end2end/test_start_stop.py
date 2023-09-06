@@ -30,7 +30,7 @@ class TestCLIStartStopCommand:
 
         focus_time_duration_minutes = 2
         output = run_cli_command_handle_output_error("start", additional_args=[str(focus_time_duration_minutes)])
-        assert output.startswith("Found a new focus time, calling start command(s) ...")
+        assert "calling start command(s) ..." in output
 
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert CommandExecutorImpl.is_dnd_active()
@@ -56,7 +56,7 @@ class TestCLIStartStopCommand:
 
         # Run the "stop" command, verify that DND is then disabled
         output = run_cli_command_handle_output_error("stop")
-        assert output.startswith("No focus time is active, calling stop command(s) ...")
+        assert output.startswith("No focus time is active anymore, calling stop command(s) ...")
 
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert not CommandExecutorImpl.is_dnd_active()
