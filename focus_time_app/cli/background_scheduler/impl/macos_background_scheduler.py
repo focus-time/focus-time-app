@@ -16,8 +16,8 @@ class MacOsBackgroundScheduler(AbstractBackgroundScheduler):
 
     LAUNCHD_AGENT_DICT = {
         "Label": f"com.focustime{get_environment_suffix()}",
-        "KeepAlive": True,
-        "ThrottleInterval": 60  # seconds
+        "StartInterval": 60,  # seconds
+        "RunAtLoad": True
     }
     LAUNCHD_AGENT_FILE = Path.home() / "Library" / "LaunchAgents" / f"com.focustime{get_environment_suffix()}.plist"
 
