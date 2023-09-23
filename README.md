@@ -74,7 +74,8 @@ running `focus-time [command] --help`. Here is a brief overview of the available
   time calendar events. If there is an active focus time calendar event, the Do-Not-Disturb mode (and other start
   commands you configured) is activated (unless this app already recently activated it). If there is no active
   calendar event (anymore), Do-Not-Disturb is deactivated again (if this app has set it), and other possibly configured
-  stop commands are called
+  stop commands are called. You would normally not call `sync` directly, because the configured background job already
+  calls it
 - `start <duration in minutes>` creates a new focus time calendar event in your configured calendar that starts _now_
   and ends in `duration` minutes. It then runs the `sync` command, so that your start command(s) are
   immediately executed
@@ -84,6 +85,7 @@ running `focus-time [command] --help`. Here is a brief overview of the available
   system supports the removal
     - Note: on macOS, you have to manually open the _Shortcuts_ app and delete the `focus-time-app` shortcut yourself
 - `version` prints the version of the tool
+- `doctor` tries to repair the scheduled background job configuration and Do-Not-Disturb helper
 
 ## Contributing & troubleshooting
 

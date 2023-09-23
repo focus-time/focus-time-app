@@ -15,7 +15,7 @@ class WindowsBackgroundScheduler(AbstractBackgroundScheduler):
     """
     Windows COM-based implementation that creates background jobs using Windows' "task scheduler" feature.
 
-    To avoid that a console window pops up every minute, SilentCMD is used, see
+    To avoid that a console window pops up on every background job execution, SilentCMD is used, see
     https://github.com/stbrenner/SilentCMD/releases/tag/v1.4
     """
 
@@ -52,6 +52,10 @@ class WindowsBackgroundScheduler(AbstractBackgroundScheduler):
             return False
 
     def _create_trigger_sync_task(self):
+        silent_cmd_binary_path = Path(sys.executable).parent / self.SILENT_CMD_BINARY
+        if hasattr(sys, "_MEIPASS"):
+            silent_cmd_binary_path = Path(sys._MEIPASS) / self.SILENT_CMD_BINARY
+
         task_def = self._scheduler.NewTask(0)
 
         start_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
@@ -63,7 +67,7 @@ class WindowsBackgroundScheduler(AbstractBackgroundScheduler):
 
         action = task_def.Actions.Create(0)  # 0 means to execute a command
         action.ID = "Trigger sync"
-        action.Path = str(Path(sys.executable).parent / self.SILENT_CMD_BINARY)
+        action.Path = str(silent_cmd_binary_path)
         self._create_cmd_file()
         action.Arguments = str(self._cmd_file_path)
 
