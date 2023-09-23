@@ -5,6 +5,7 @@ from typing import Tuple, Annotated
 
 import typer
 
+from focus_time_app.cli.commands.doctor_command import DoctorCommand
 from focus_time_app.cli.commands.configuration_command import ConfigurationCommand
 from focus_time_app.cli.commands.start_command import StartCommand
 from focus_time_app.cli.commands.stop_command import StopCommand
@@ -153,6 +154,14 @@ def version():
     Prints the version of the Focus time app tool.
     """
     typer.echo(f"Focus time app {get_version()}")
+
+
+@app.command()
+def doctor():
+    """
+    Repairs the configuration of the background scheduler and Do-Not-Disturb helper.
+    """
+    DoctorCommand().run()
 
 
 def get_version() -> str:
