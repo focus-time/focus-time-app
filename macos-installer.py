@@ -73,8 +73,13 @@ def set_existing_installation_path(installation_path: Path):
 
 
 def install_or_upgrade_app(temp_archive_path: Path, installation_path: Path, is_version_upgrade: bool = False):
+    focus_time_binary_path = installation_path / "focus-time"
     is_replace = False
     if installation_path.is_dir():
+        # First unregister the background job, to avoid that it fails during the replace operation, and because we
+        # want to avoid that the password prompt (triggered by the background job) is shown too early
+        subprocess.call([str(focus_time_binary_path), "uninstall"])
+
         # clean the existing contents
         for f in installation_path.iterdir():
             try:
@@ -96,13 +101,14 @@ def install_or_upgrade_app(temp_archive_path: Path, installation_path: Path, is_
             input("Note: the calendar credentials are stored in a macOS Keychain. Keychain detects that the "
                   "'focus-time' binary has changed (due to the version upgrade), and therefore rejects the new "
                   "binary's request to read the credentials, for security reasons. "
-                  "Please press <enter> to run the 'sync' command, which will "
-                  "cause a macOS dialog to show up, asking you to grant 'focus-time' access to the keychain again. "
-                  "You will have to provide your password and then click 'Always allow'.")
+                  "Please press <enter> to run the 'sync' command, which shortly "
+                  "causes a macOS dialog to show up, asking you to grant 'focus-time' access to the keychain again. "
+                  "You have to provide your password and then click 'Always allow'.")
 
-            focus_time_binary_path = installation_path / "focus-time"
             output = subprocess.check_output([str(focus_time_binary_path), "sync"]).decode("utf-8")
             print(f"Result of 'sync' command: {output}")
+        # Install the background job again
+        subprocess.call([str(focus_time_binary_path), "doctor"])
     else:
         print("Successfully installed focus-time")
 
