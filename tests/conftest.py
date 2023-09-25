@@ -3,10 +3,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
-from typing import IO, Any, List
+from typing import IO, Any, List, Dict
 
 import marshmallow_dataclass
 import pytest
+from playwright.sync_api import BrowserType, BrowserContext
 
 from focus_time_app.cli.background_scheduler import BackgroundSchedulerImpl
 from focus_time_app.command_execution import CommandExecutorImpl
@@ -74,6 +75,18 @@ def stop_commands(tmp_path: Path) -> ConfiguredCommands:
     raise NotImplementedError
 
 
+@pytest.fixture(scope="session")
+def browser_context(browser_type: BrowserType, browser_type_launch_args: Dict, browser_context_args: Dict):
+    browser = browser_type.launch(**{
+        **browser_type_launch_args,
+        **browser_context_args
+    })
+
+    context = browser.new_context()
+    yield context
+    context.close()
+
+
 def write_line_to_stream(stream: IO, input: Any):
     stream.write(str(input) + '\n')
     stream.flush()
@@ -87,19 +100,20 @@ class ConfiguredCLI:
 
 
 @pytest.fixture(params=[CalendarType.Outlook365, CalendarType.CalDAV])
-def configured_cli_no_bg_jobs(request, start_commands, stop_commands) -> ConfiguredCLI:
+def configured_cli_no_bg_jobs(request, start_commands, stop_commands, browser_context) -> ConfiguredCLI:
     yield from configured_cli(request.param, skip_background_scheduler_setup=True, start_commands=start_commands,
-                              stop_commands=stop_commands)
+                              stop_commands=stop_commands, browser_context=browser_context)
 
 
 @pytest.fixture(params=[CalendarType.Outlook365])
-def configured_cli_with_bg_jobs(request, start_commands, stop_commands) -> ConfiguredCLI:
+def configured_cli_with_bg_jobs(request, start_commands, stop_commands, browser_context) -> ConfiguredCLI:
     yield from configured_cli(request.param, skip_background_scheduler_setup=False, start_commands=start_commands,
-                              stop_commands=stop_commands)
+                              stop_commands=stop_commands, browser_context=browser_context)
 
 
 @pytest.fixture(params=[CalendarType.Outlook365, CalendarType.CalDAV])
-def configured_calendar_adapter(request, start_commands, stop_commands) -> AbstractTestingCalendarAdapter:
+def configured_calendar_adapter(request, start_commands, stop_commands,
+                                browser_context) -> AbstractTestingCalendarAdapter:
     dnd_profile_name = CommandExecutorConstants.WINDOWS_FOCUS_ASSIST_PRIORITY_ONLY_PROFILE if sys.platform == "win32" \
         else "unused"
     focustime_event_name = "Focustime-" + get_random_event_name_postfix()
@@ -109,11 +123,12 @@ def configured_calendar_adapter(request, start_commands, stop_commands) -> Abstr
                              dnd_profile_name=dnd_profile_name, set_event_reminder=True,
                              event_reminder_time_minutes=15, show_notification=False)
 
-    return get_configured_calendar_adapter_for_testing(config)
+    return get_configured_calendar_adapter_for_testing(config, browser_context=browser_context)
 
 
 def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup: bool,
-                   start_commands: ConfiguredCommands, stop_commands: ConfiguredCommands) -> ConfiguredCLI:
+                   start_commands: ConfiguredCommands, stop_commands: ConfiguredCommands,
+                   browser_context: BrowserContext) -> ConfiguredCLI:
     reset_dnd_and_bg_scheduler()
     if Persistence.ongoing_focustime_markerfile_exists():
         Persistence.set_ongoing_focustime(ongoing=False)
@@ -144,7 +159,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
     out = config_process.stdout.readline()  # asks for Calendar adapter
 
     if calendar_type is CalendarType.Outlook365:
-        configure_outlook365_calendar_adapter(config_process, config)
+        configure_outlook365_calendar_adapter(config_process, config, browser_context=browser_context)
     elif calendar_type is CalendarType.CalDAV:
         configure_caldav_calendar_adapter(config_process, config)
 
@@ -190,7 +205,7 @@ def configured_cli(calendar_type: CalendarType, skip_background_scheduler_setup:
                                            f"Stdout output:\n{stdout}\n" \
                                            f"Stderr output:\n{stderr}"
 
-    calendar_adapter = get_configured_calendar_adapter_for_testing(config)
+    calendar_adapter = get_configured_calendar_adapter_for_testing(config, browser_context=browser_context)
 
     yield ConfiguredCLI(configuration=config, calendar_adapter=calendar_adapter,
                         verification_file_path=start_commands.verification_file_path)
@@ -205,7 +220,8 @@ def reset_dnd_and_bg_scheduler():
     BackgroundSchedulerImpl.uninstall_background_scheduler()
 
 
-def configure_outlook365_calendar_adapter(config_process: Popen, config: ConfigurationV1):
+def configure_outlook365_calendar_adapter(config_process: Popen, config: ConfigurationV1,
+                                          browser_context: BrowserContext):
     """
     Provides the inputs to the "configure" command that are necessary to configure the Outlook 365 calendar adapter.
     Requires the environment variables OUTLOOK365_EMAIL and OUTLOOK365_PASSWORD to be set for the corresponding
@@ -224,7 +240,7 @@ def configure_outlook365_calendar_adapter(config_process: Popen, config: Configu
     assert url.startswith("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?response_type=code")
     out = config_process.stdout.readline()  # more Outlook-specific instructions
     out = config_process.stdout.readline()  # more Outlook-specific instructions
-    auth_code_url = get_outlook365_authorization_code_url(url)
+    auth_code_url = get_outlook365_authorization_code_url(browser_context, url)
     write_line_to_stream(config_process.stdin, auth_code_url)
     assert "Authentication Flow Completed. Oauth Access Token Stored. You can now use the API." \
            in config_process.stdout.readline()
@@ -256,7 +272,8 @@ def configure_caldav_calendar_adapter(config_process: Popen, config: Configurati
     config.adapter_configuration = caldav_configuration_v1_schema.dump(adapter_configuration)
 
 
-def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) -> AbstractTestingCalendarAdapter:
+def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1,
+                                                browser_context: BrowserContext) -> AbstractTestingCalendarAdapter:
     """
     Creates a dedicated calendar adapter for the automated test. This is particularly necessary because on macOS,
     there are issues with the Keychain access, which make it impossible to "reuse" the credentials created by the
@@ -264,7 +281,7 @@ def get_configured_calendar_adapter_for_testing(configuration: ConfigurationV1) 
     frozen focus-time binary) cannot be read by any other apps #B (e.g. Python running pytest).
     """
     if configuration.calendar_type is CalendarType.Outlook365:
-        adapter = Outlook365TestingCalendarAdapter(configuration)
+        adapter = Outlook365TestingCalendarAdapter(configuration, browser_context)
 
     elif configuration.calendar_type is CalendarType.CalDAV:
         adapter = CaldavTestingCalendarAdapter(configuration)
