@@ -97,10 +97,10 @@ class TestCLISyncCommand:
             assert not CommandExecutorImpl.is_dnd_active()
         assert not configured_cli_with_bg_jobs.verification_file_path.exists()
 
-        # Note: the GitHub CI/CD runners are slow to run the jobs - waiting for EXACTLY 60 minutes was too little,
+        # Note: the GitHub CI/CD runners are slow to run the jobs - waiting for EXACTLY 60 seconds was too little,
         # the background job was still in a running state
-        logger.info("Sleeping for one minute and 10 seconds")
-        time.sleep(70)
+        logger.info("Sleeping for one minute and 20 seconds")
+        time.sleep(80)
 
         if CommandExecutorImpl.is_dnd_helper_installed():
             assert CommandExecutorImpl.is_dnd_active()
