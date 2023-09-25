@@ -26,7 +26,7 @@ def get_outlook365_authorization_code_url(browser_context: BrowserContext, reque
 
     try:
         expect(page).to_have_url(authenticated_page_url_pattern)
-        return page.url
+        return page.url  # happy path, we are already logged in
     except AssertionError:
         pass
 

@@ -3,11 +3,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
-from typing import IO, Any, List, Dict
+from typing import IO, Any, List
 
 import marshmallow_dataclass
 import pytest
-from playwright.sync_api import BrowserType, BrowserContext
+from playwright.sync_api import BrowserContext, Browser
 
 from focus_time_app.cli.background_scheduler import BackgroundSchedulerImpl
 from focus_time_app.command_execution import CommandExecutorImpl
@@ -76,12 +76,12 @@ def stop_commands(tmp_path: Path) -> ConfiguredCommands:
 
 
 @pytest.fixture(scope="session")
-def browser_context(browser_type: BrowserType, browser_type_launch_args: Dict, browser_context_args: Dict):
-    browser = browser_type.launch(**{
-        **browser_type_launch_args,
-        **browser_context_args
-    })
-
+def browser_context(browser: Browser) -> BrowserContext:
+    """
+    Implements a BrowserContext fixture (which the Playwright folks forgot (?) to implement).
+    This speeds up tests, because we are using the same browser session in all tests, which e.g. saves us from having
+    to log into the Microsoft 365 account multiple times.
+    """
     context = browser.new_context()
     yield context
     context.close()
