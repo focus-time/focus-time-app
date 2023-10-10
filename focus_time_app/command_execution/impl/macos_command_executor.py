@@ -49,6 +49,8 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
         if is_production_environment():
             path = str(Path(sys.executable).parent
                        / f"{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}.shortcut")
+            if hasattr(sys, "_MEIPASS"):
+                path = str(Path(sys._MEIPASS) / f"{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}.shortcut")
         else:
             path = str(Path(__file__).parent.parent.parent.parent / "resources"
                        / f"{CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME}.shortcut")
