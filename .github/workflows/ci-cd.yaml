@@ -39,9 +39,13 @@ jobs:
 
       - name: Run integration tests
         if: startsWith(github.ref, 'refs/tags/') == false
-        run: |
-          playwright install --with-deps chromium
-          pytest tests --junitxml=junit/test-results.xml
+        uses: nick-fields/retry@v2  # tests are a bit flaky and time out after 6h, so we auto-retry them
+        with:
+          timeout_minutes: 60
+          max_attempts: 2
+          command: |
+            playwright install --with-deps chromium
+            pytest tests --junitxml=junit/test-results.xml
         env:
           CI: "1"  # keep variable name in sync with CI_ENV_VAR_NAME
           OUTLOOK365_EMAIL: ${{ secrets.OUTLOOK365_EMAIL }}
