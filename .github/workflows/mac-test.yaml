@@ -11,7 +11,7 @@ jobs:
   build-windows-dnd-helper:
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.1.1
       - name: Register DND helper
         run: |
           # Temporary hack, as per https://github.com/actions/runner-images/issues/7531#issuecomment-1617707220
