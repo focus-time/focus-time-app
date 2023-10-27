@@ -37,7 +37,7 @@ class MacOsCommandExecutor(AbstractCommandExecutor):
                               shell=True)
 
     def is_dnd_helper_installed(self) -> bool:
-        output_bytes = subprocess.check_output(["/usr/bin/shortcuts", "list"], timeout=20)
+        output_bytes = subprocess.check_output(["/usr/bin/shortcuts", "list"], timeout=20, shell=True)
         output_lines = output_bytes.decode("utf-8").splitlines()
         return CommandExecutorConstants.MACOS_FOCUS_MODE_SHORTCUT_NAME in output_lines
 

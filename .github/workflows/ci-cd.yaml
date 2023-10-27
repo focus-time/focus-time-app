@@ -45,7 +45,6 @@ jobs:
           max_attempts: 2
           command: |
             playwright install --with-deps chromium
-            export PYTEST_DEBUG=true
             pytest -o faulthandler_timeout=240 tests --junitxml=junit/test-results.xml
         env:
           CI: "1"  # keep variable name in sync with CI_ENV_VAR_NAME
