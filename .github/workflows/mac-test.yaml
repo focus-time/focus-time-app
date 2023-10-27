@@ -12,3 +12,4 @@ jobs:
           /usr/bin/shortcuts
           echo foo
           /usr/bin/shortcuts list
+          echo bar
