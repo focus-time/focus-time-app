@@ -39,10 +39,13 @@ jobs:
 
       - name: Run integration tests
         if: startsWith(github.ref, 'refs/tags/') == false
-        uses: nick-fields/retry@v2  # tests are a bit flaky and time out after 6h, so we auto-retry them
+        uses: nick-fields/retry@v2  # tests are a bit flaky and time out after 6h, so we auto-retry them and reduce the timeout
         with:
           timeout_minutes: 60
           max_attempts: 2
+          # Note: should the test suite hang (without any output), put "-o faulthandler_timeout=240" right after "pytest"
+          # which dumps the traceback of all threads after a timeout or segfault,
+          # see https://docs.pytest.org/en/7.1.x/how-to/failures.html#fault-handler
           command: |
             playwright install --with-deps chromium
             pytest tests --junitxml=junit/test-results.xml
