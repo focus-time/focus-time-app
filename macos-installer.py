@@ -105,7 +105,7 @@ def install_or_upgrade_app(temp_archive_path: Path, installation_path: Path, is_
                   "causes a macOS dialog to show up, asking you to grant 'focus-time' access to the keychain again. "
                   "You have to provide your password and then click 'Always allow'.")
 
-            output = subprocess.check_output([str(focus_time_binary_path), "sync"]).decode("utf-8")
+            output = subprocess.check_output([str(focus_time_binary_path), "sync"], shell=True).decode("utf-8")
             print(f"Result of 'sync' command: {output}")
         # Install the background job again
         subprocess.call([str(focus_time_binary_path), "doctor"])
