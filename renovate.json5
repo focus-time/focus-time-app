@@ -17,5 +17,17 @@
       "automerge": true,
     }
   ],
-  "dependencyDashboardTitle": "Renovate Bot dependency dashboard"
+  "dependencyDashboardTitle": "Renovate Bot dependency dashboard",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "^\\.github/actions/build-app/action\\.yaml$"
+      ],
+      "matchStrings": [
+        "datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\s*python-version: \"(?<currentValue>.*)\"\\s"
+      ],
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    }
+  ]
 }
