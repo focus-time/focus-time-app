@@ -39,7 +39,7 @@ runs:
           return filename;
         result-encoding: string
     - name: Create zip archive of frozen app
-      uses: thedoctor0/zip-release@0.7.5
+      uses: thedoctor0/zip-release@0.7.6
       with:
         type: "zip"
         directory:  ${{ inputs.dist-app-dir }}
