@@ -11,7 +11,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup Python version
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         # renovate: datasource=docker depName=python versioning=docker
         python-version: "3.12.0"
