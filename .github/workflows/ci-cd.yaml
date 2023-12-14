@@ -74,7 +74,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Download all releases
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
       # The download job creates a separate folder for every release, resulting in files such as
       # "frozen-app-macos-latest/focus-time-app-macos-v0.1.1.zip". Therefore, need a wide glob below for the
       # Release job
