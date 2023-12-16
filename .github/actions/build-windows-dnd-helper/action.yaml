@@ -14,7 +14,7 @@ runs:
         Move-item -Path 'x64/Release/windows-dnd.exe' -destination '../' -force
       shell: pwsh
     - name: Upload DND helper executable  # For debugging purposes
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: dnd-helper-windows-exe
         path: windows-dnd.exe
