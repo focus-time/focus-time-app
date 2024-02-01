@@ -39,7 +39,7 @@ jobs:
 
       - name: Run integration tests
         if: startsWith(github.ref, 'refs/tags/') == false
-        uses: nick-fields/retry@v2  # tests are a bit flaky and time out after 6h, so we auto-retry them and reduce the timeout
+        uses: nick-fields/retry@v3  # tests are a bit flaky and time out after 6h, so we auto-retry them and reduce the timeout
         with:
           timeout_minutes: 60
           max_attempts: 2
