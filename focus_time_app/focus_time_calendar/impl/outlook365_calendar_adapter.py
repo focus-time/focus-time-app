@@ -1,9 +1,9 @@
 import os
+import zoneinfo
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Tuple
 
 import marshmallow_dataclass
-import pytz
 import typer
 from O365 import Account
 from O365.calendar import Schedule, Calendar, Event
@@ -65,7 +65,7 @@ class Outlook365CalendarAdapter(AbstractCalendarAdapter):
         # https://pytz-deprecation-shim.readthedocs.io/en/latest/migration.html
         # The issue is known (https://github.com/O365/python-o365/issues/753) but unlikely to be fixed soon
         self._account = Account(str(self._outlook_configuration.client_id), auth_flow_type="public",
-                                token_backend=self._backend, timezone=pytz.UTC,
+                                token_backend=self._backend, timezone=zoneinfo.ZoneInfo("UTC"),
                                 tenant_id=self._outlook_configuration.tenant_id or OUTLOOK365_OAUTH_COMMON_TENANT)
         if not self._account.is_authenticated:
             raise RuntimeError("Unable to load auth token")
