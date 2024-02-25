@@ -1,0 +1,7 @@
+{
+    "files": [
+        "main.py",
+        "main.qml",
+        "view.qml"
+    ]
+}
