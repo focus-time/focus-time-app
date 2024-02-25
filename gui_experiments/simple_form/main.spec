@@ -10,7 +10,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['PySide6.QtWebEngineCore'], # does not seem to work! Need to manually delete Contents/Frameworks/Qt/lib/QtWebEngineCore.framework (175 MB)
     noarchive=False,
 )
 pyz = PYZ(a.pure)
@@ -40,4 +40,10 @@ coll = COLLECT(
     upx=True,
     upx_exclude=[],
     name='main',
+)
+app = BUNDLE(
+    coll,
+    name='main.app',
+    icon=None,
+    bundle_identifier=None,
 )

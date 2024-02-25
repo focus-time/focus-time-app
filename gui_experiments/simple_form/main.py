@@ -1,7 +1,8 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial
-
+import logging
 import sys
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from PySide6 import QtCore
@@ -20,7 +21,7 @@ class GuiHandler(QObject):
 
     @Slot()
     def handleTextChanged(self):
-        print("Text changed!")
+        logging.info("Text changed!")
 
     def showWindow(self):
         window.show()
@@ -37,10 +38,17 @@ def qt_message_handler(mode, context, message):
         mode = 'fatal'
     else:
         mode = 'Debug'
-    print("%s: %s (%s:%d, %s)" % (mode, message, context.file, context.line, context.file))
+    logging.info("%s: %s (%s:%d, %s)" % (mode, message, context.file, context.line, context.file))
 
 
 if __name__ == '__main__':
+    log_file_path = Path(__file__).parent / "log.txt"
+    logging.basicConfig(
+        handlers=[RotatingFileHandler(log_file_path, maxBytes=1024 * 1024 * 5, backupCount=2, encoding="utf-8")],
+        level=logging.DEBUG,
+        format="%(asctime)s.%(msecs)03d %(name)s %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S")
+
     QtCore.qInstallMessageHandler(qt_message_handler)  # helps us get warnings and errors from QML
     # app = QGuiApplication(sys.argv)
     app = QApplication(sys.argv)  # QSystemTrayIcon requires QApplication, QGuiApplication does not work
@@ -79,7 +87,8 @@ if __name__ == '__main__':
 
     tray_icon = QSystemTrayIcon()
     tray_icon.setContextMenu(tray_icon_menu)
-    tray_icon.setIcon(QIcon("test.svg"))
+    icon_file = Path(__file__).parent / "test.svg"
+    tray_icon.setIcon(QIcon(str(icon_file)))
     tray_icon.show()
 
     app.setQuitOnLastWindowClosed(False)
