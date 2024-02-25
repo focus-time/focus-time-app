@@ -38,11 +38,11 @@ def qt_message_handler(mode, context, message):
         mode = 'fatal'
     else:
         mode = 'Debug'
-    logging.info("%s: %s (%s:%d, %s)" % (mode, message, context.file, context.line, context.file))
+    logging.info("%s: %s (%s:%d, %s) " % (mode, message, context.file, context.line, context.file))
 
 
 if __name__ == '__main__':
-    log_file_path = Path(__file__).parent / "log.txt"
+    log_file_path = Path(__file__).parent / "log.txt" if sys.platform != "darwin" else Path.home() / "Library" / "Logs" / "formtest-log.txt"
     logging.basicConfig(
         handlers=[RotatingFileHandler(log_file_path, maxBytes=1024 * 1024 * 5, backupCount=2, encoding="utf-8")],
         level=logging.DEBUG,
