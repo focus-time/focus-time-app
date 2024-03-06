@@ -6,7 +6,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from PySide6 import QtCore
-from PySide6.QtCore import QObject, Slot, Signal, QtMsgType, QUrl, Qt
+from PySide6.QtCore import QObject, Slot, Signal, QtMsgType, QUrl, Qt, QThreadPool, QRunnable
 from PySide6.QtGui import QGuiApplication, QWindow, QAction, QIcon
 from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
@@ -41,31 +41,27 @@ def qt_message_handler(mode, context, message):
     logging.info("%s: %s (%s:%d, %s) " % (mode, message, context.file, context.line, context.file))
 
 
-class BackgroundWorker(QObject):
+class WorkerTask(QRunnable, QObject):
     newDataAvailable = Signal(str, arguments=['text'])
 
     def __init__(self):
-        super().__init__()
-        self.thread = QtCore.QThread()
-        self.moveToThread(self.thread)
-        self.thread.started.connect(self.run, Qt.DirectConnection)
-        self.thread.start()
+        QRunnable.__init__(self)
+        QObject.__init__(self)
+        self._abort = False
 
+    @Slot()
     def run(self):
-        logging.info("Background worker started")
         i = 0
         while True:
-            print("HLEO")
+            if self._abort:
+                break
             QtCore.QThread.sleep(1)
-            print(str(QtCore.QThread.currentThread()))
             self.newDataAvailable.emit(str(i))
             i += 1
 
     @Slot()
     def stop(self):
-        self.thread.quit()
-        self.thread.wait()
-        self.thread = None
+        self._abort = True
 
 
 if __name__ == '__main__':
@@ -122,9 +118,13 @@ if __name__ == '__main__':
 
     app.setQuitOnLastWindowClosed(False)
 
-    worker = BackgroundWorker()
-    app.aboutToQuit.connect(worker.stop)
-    worker.newDataAvailable.connect(lambda text: dummy_label.setProperty("text", text))
+    thread_pool = QThreadPool()
+    thread_pool.setMaxThreadCount(1)
+    worker_task = WorkerTask()
+    app.aboutToQuit.connect(worker_task.stop)
+    worker_task.newDataAvailable.connect(lambda text: dummy_label.setProperty("text", text))
+    thread_pool.start(worker_task)
 
-    print(str(QtCore.QThread.currentThread()))
-    sys.exit(app.exec())
+    exit_code = app.exec()
+    thread_pool.waitForDone()  # blocks until last thread has exited
+    sys.exit(exit_code)
