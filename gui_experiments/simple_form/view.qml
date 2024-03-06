@@ -27,6 +27,11 @@ ApplicationWindow {
             placeholderText: "Enter name"
             // onTextEdited: guiHandler.handleTextChanged()
         }
+
+        Label {
+            objectName: "dummyLabel"
+            text: ""
+        }
     }
 
     /*Connections {

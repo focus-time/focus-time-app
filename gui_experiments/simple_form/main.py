@@ -6,7 +6,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from PySide6 import QtCore
-from PySide6.QtCore import QObject, Slot, Signal, QtMsgType, QUrl
+from PySide6.QtCore import QObject, Slot, Signal, QtMsgType, QUrl, Qt
 from PySide6.QtGui import QGuiApplication, QWindow, QAction, QIcon
 from PySide6.QtQml import QQmlApplicationEngine, QmlElement
 from PySide6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
@@ -41,8 +41,36 @@ def qt_message_handler(mode, context, message):
     logging.info("%s: %s (%s:%d, %s) " % (mode, message, context.file, context.line, context.file))
 
 
+class BackgroundWorker(QObject):
+    newDataAvailable = Signal(str, arguments=['text'])
+
+    def __init__(self):
+        super().__init__()
+        self.thread = QtCore.QThread()
+        self.moveToThread(self.thread)
+        self.thread.started.connect(self.run, Qt.DirectConnection)
+        self.thread.start()
+
+    def run(self):
+        logging.info("Background worker started")
+        i = 0
+        while True:
+            print("HLEO")
+            QtCore.QThread.sleep(1)
+            print(str(QtCore.QThread.currentThread()))
+            self.newDataAvailable.emit(str(i))
+            i += 1
+
+    @Slot()
+    def stop(self):
+        self.thread.quit()
+        self.thread.wait()
+        self.thread = None
+
+
 if __name__ == '__main__':
-    log_file_path = Path(__file__).parent / "log.txt" if sys.platform != "darwin" else Path.home() / "Library" / "Logs" / "formtest-log.txt"
+    log_file_path = Path(
+        __file__).parent / "log.txt" if sys.platform != "darwin" else Path.home() / "Library" / "Logs" / "formtest-log.txt"
     logging.basicConfig(
         handlers=[RotatingFileHandler(log_file_path, maxBytes=1024 * 1024 * 5, backupCount=2, encoding="utf-8")],
         level=logging.DEBUG,
@@ -71,6 +99,7 @@ if __name__ == '__main__':
     window: QWindow = objs[0]
     text_field: QmlElement = window.findChild(QObject, "nameField")
     text_button: QmlElement = window.findChild(QObject, "setTextButton")
+    dummy_label: QmlElement = window.findChild(QObject, "dummyLabel")
     text_field.textEdited.connect(gui_handler.handleTextChanged)
     text_button.clicked.connect(gui_handler.handleButtonClick)
     gui_handler.setText.connect(lambda text: text_field.setProperty("text", text))
@@ -93,4 +122,9 @@ if __name__ == '__main__':
 
     app.setQuitOnLastWindowClosed(False)
 
+    worker = BackgroundWorker()
+    app.aboutToQuit.connect(worker.stop)
+    worker.newDataAvailable.connect(lambda text: dummy_label.setProperty("text", text))
+
+    print(str(QtCore.QThread.currentThread()))
     sys.exit(app.exec())
