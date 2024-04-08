@@ -1,5 +1,5 @@
 O365==2.0.34
-typer==0.12.1
+typer==0.12.2
 marshmallow-dataclass==8.6.1
 PyYAML==6.0.1
 keyring==25.1.0
