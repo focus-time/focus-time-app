@@ -1,4 +1,4 @@
-O365==2.0.35
+O365==2.0.36
 typer==0.12.3
 marshmallow-dataclass==8.7.0
 PyYAML==6.0.1
