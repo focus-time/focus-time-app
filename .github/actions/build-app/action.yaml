@@ -14,7 +14,7 @@ runs:
       uses: actions/setup-python@v5
       with:
         # renovate: datasource=docker depName=python versioning=docker
-        python-version: "3.12.4"
+        python-version: "3.12.5"
         cache: "pip"
     - name: Freeze app with PyInstaller
       run: |
