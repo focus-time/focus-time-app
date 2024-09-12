@@ -1,6 +1,6 @@
 O365==2.0.36
 typer==0.12.5
-marshmallow-dataclass==8.7.0
+marshmallow-dataclass==8.7.1
 PyYAML==6.0.2
 keyring==25.3.0
 tendo==0.3.0
