@@ -4,7 +4,7 @@ marshmallow-dataclass==8.7.1
 PyYAML==6.0.2
 keyring==25.4.1
 tendo==0.3.0
-pywin32==306; sys_platform == 'win32'
+pywin32==307; sys_platform == 'win32'
 pyinstaller==6.10.0
 pytest==8.3.3
 pytest-playwright==0.5.2
